@@ -24,3 +24,7 @@ _templates
 
 # javascript
 package-lock.json
+
+.idea/
+.venv/
+*/**/build/*
