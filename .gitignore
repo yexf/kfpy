@@ -27,4 +27,5 @@ package-lock.json
 
 .idea/
 .venv/
+.vscode/
 */**/build/*
