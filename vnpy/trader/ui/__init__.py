@@ -36,7 +36,7 @@ def create_qapp(app_name: str = "VN Trader"):
     font = QtGui.QFont(SETTINGS["font.family"], SETTINGS["font.size"])
     qapp.setFont(font)
 
-    icon = QtGui.QIcon(get_icon_path(__file__, "vnpy.ico"))
+    icon = QtGui.QIcon(get_icon_path(__file__, "kfpy.ico"))
     qapp.setWindowIcon(icon)
 
     if "Windows" in platform.uname():
