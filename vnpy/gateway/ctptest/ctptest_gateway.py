@@ -2,9 +2,11 @@
 """
 
 from datetime import datetime
-
-from .vnctpmd import MdApi
-from .vnctptd import TdApi
+from vnpy.api.ctp import (
+    MdApi,
+    TdApi)
+# from .vnctpmd import MdApi
+# from .vnctptd import TdApi
 from .ctp_constant import (
     THOST_FTDC_OAS_Submitted,
     THOST_FTDC_OAS_Accepted,
