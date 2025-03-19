@@ -1,0 +1,78 @@
+{
+  "host": {
+    "development": {
+      "dataurl": "//reportapi.uat.emapd.com/",
+      "quoteurl": "//push2.eastmoney.com/",
+      "quotehisurl": "//push2his.eastmoney.com/",
+      "dcfmurl": "//dcfm.eastmoney.com/",
+      "anoticeurl": "//np-anotice-stock.eastmoney.com/",
+      "cnoticeurl": "//np-cnotice-stock.eastmoney.com/",
+      "datacenter": "//datacenter-web.eastmoney.com/",
+      "soapi": "//searchapi.eastmoney.com/",
+      "cmsdataapi": "//cmsdataapi.eastmoney.com/",
+      "newsinfo": "//newsinfo.eastmoney.com/",
+      "url": ""
+    },
+    "zptest": {
+      "dataurl": "//reportapi.uat.emapd.com/",
+      "quoteurl": "//push2test.eastmoney.com/",
+      "quotehisurl": "//push2his.eastmoney.com/",
+      "dcfmurl": "//dcfm.eastmoney.com/",
+      "anoticeurl": "//np-anotice-stock-test.eastmoney.com/",
+      "cnoticeurl": "//np-cnotice-stock-test.emapd.com/",
+      "datacenter": "//testdatacenter.eastmoney.com/",
+      "soapi": "//searchapi.eastmoney.com/",
+      "cmsdataapi": "//cmsdataapi.eastmoney.com/",
+      "newsinfo": "//newsinfo.eastmoney.com/",
+      "url": ""
+    },
+    "gray": {
+      "dataurl": "//reportapi.eastmoney.com/",
+      "quoteurl": "//push2.eastmoney.com/",
+      "quotehisurl": "//push2his.eastmoney.com/",
+      "dcfmurl": "//dcfm.eastmoney.com/",
+      "anoticeurl": "//np-anotice-stock.eastmoney.com/",
+      "cnoticeurl": "//np-cnotice-stock.eastmoney.com/",
+      "datacenter": "//graydatacenter.eastmoney.com/",
+      "soapi": "//searchapi.eastmoney.com/",
+      "cmsdataapi": "//cmsdataapi.eastmoney.com/",
+      "newsinfo": "//newsinfo.eastmoney.com/",
+      "url": ""
+    },
+    "production": {
+      "dataurl": "//reportapi.eastmoney.com/",
+      "quoteurl": "//push2.eastmoney.com/",
+      "quotehisurl": "//push2his.eastmoney.com/",
+      "dcfmurl": "//dcfm.eastmoney.com/",
+      "anoticeurl": "//np-anotice-stock.eastmoney.com/",
+      "cnoticeurl": "//np-cnotice-stock.eastmoney.com/",
+      "datacenter": "//datacenter-web.eastmoney.com/",
+      "soapi": "//searchapi.eastmoney.com/",
+      "cmsdataapi": "//cmsdataapi.eastmoney.com/",
+      "newsinfo": "//newsinfo.eastmoney.com/",
+      "url": ""
+    }
+  },
+  "dataview": {
+    "dataurl": {
+      "hostname": "datacenter",
+      "url": "api/data/v1/get",
+      "params": {
+        "reportName": "RPT_BOND_CB_LIST",
+        "columns": "ALL",
+        "quoteColumns": "f2~01~CONVERT_STOCK_CODE~CONVERT_STOCK_PRICE,f235~10~SECURITY_CODE~TRANSFER_PRICE,f236~10~SECURITY_CODE~TRANSFER_VALUE,f2~10~SECURITY_CODE~CURRENT_BOND_PRICE,f237~10~SECURITY_CODE~TRANSFER_PREMIUM_RATIO,f239~10~SECURITY_CODE~RESALE_TRIG_PRICE,f240~10~SECURITY_CODE~REDEEM_TRIG_PRICE,f23~01~CONVERT_STOCK_CODE~PBV_RATIO",
+        "quoteType": "0",
+        "source": "WEB",
+        "client": "WEB"
+      }
+    },
+    "urlkeyvalues": {
+      "pagenumber": "pageNumber",
+      "pagesize": "pageSize",
+      "sortname": "sortColumns",
+      "sortorder": "sortTypes"
+    },
+    "sortname": "PUBLIC_START_DATE,SECURITY_CODE",
+    "sortorder": "-1,-1"
+  }
+}
