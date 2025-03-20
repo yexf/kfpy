@@ -4,6 +4,8 @@
 @Time      :2022/11/8 17:14
 @Author    :fsksf
 """
+from dataclasses import asdict
+from datetime import datetime
 
 from src.trader.object import (
     CancelRequest, OrderRequest, SubscribeRequest, TickData,
@@ -17,6 +19,8 @@ from .utils import (
     TO_VN_Product, to_vn_product, timestamp_to_datetime,
     to_qmt_code
 )
+from ...trader.utility import load_json, save_json
+
 
 # qmt行情接口
 class MD:
@@ -39,7 +43,30 @@ class MD:
         )
 
     def connect(self, setting: dict) -> None:
-        self.get_contract()
+        current_date = str(datetime.now().date())
+        json_file = "qmt_contract.json"
+        contract = load_json(json_file)
+        if "date" in contract and contract["date"] == current_date:
+            def dict_to_dataclass(cls, data):
+                return cls(**data)
+            contract_data = contract["data"]
+            for key in contract_data:
+                contract = dict_to_dataclass(ContractData, contract_data[key])
+                self.gateway.contracts[key] = contract
+        else:
+            self.get_contract()
+            contract_data = {}
+            for key in self.gateway.contracts:
+                value = self.gateway.contracts[key]
+                contract_data[key] = asdict(value)
+                del contract_data[key]['extra']
+                exchange = contract_data[key]["exchange"]
+                product = contract_data[key]["product"]
+                contract_data[key]["exchange"] = exchange.value
+                contract_data[key]["product"] = product.value
+            contract["data"] = contract_data
+            contract["date"] = current_date
+            save_json(json_file, contract)
         return
 
     def get_contract(self):

@@ -256,6 +256,10 @@ class ContractData(BaseData):
 
     def __post_init__(self) -> None:
         """"""
+        if type(self.exchange) == str:
+            self.exchange = Exchange(self.exchange)
+        if type(self.product) == str:
+            self.product = Product(self.product)
         self.vt_symbol: str = f"{self.symbol}.{self.exchange.value}"
 
 
