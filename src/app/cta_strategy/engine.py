@@ -10,9 +10,9 @@ from copy import copy
 from glob import glob
 from concurrent.futures import Future
 
-from vnpy.event import Event, EventEngine
-from vnpy.trader.engine import BaseEngine, MainEngine
-from vnpy.trader.object import (
+from src.event import Event, EventEngine
+from src.trader.engine import BaseEngine, MainEngine
+from src.trader.object import (
     OrderRequest,
     SubscribeRequest,
     HistoryRequest,
@@ -24,12 +24,12 @@ from vnpy.trader.object import (
     TradeData,
     ContractData,
 )
-from vnpy.trader.event import (
+from src.trader.event import (
     EVENT_TICK,
     EVENT_ORDER,
     EVENT_TRADE
 )
-from vnpy.trader.constant import (
+from src.trader.constant import (
     Direction,
     OrderType,
     Interval,
@@ -37,9 +37,9 @@ from vnpy.trader.constant import (
     Offset,
     Status
 )
-from vnpy.trader.utility import load_json, save_json, extract_vt_symbol, round_to
-from vnpy.trader.database import BaseDatabase, get_database, DB_TZ
-from vnpy.trader.datafeed import BaseDatafeed, get_datafeed
+from src.trader.utility import load_json, save_json, extract_vt_symbol, round_to
+from src.trader.database import BaseDatabase, get_database, DB_TZ
+from src.trader.datafeed import BaseDatafeed, get_datafeed
 
 from .base import (
     APP_NAME,

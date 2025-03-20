@@ -7,19 +7,19 @@ from src.trader.utility import BarGenerator, ArrayManager
 
 from .base import APP_NAME, StopOrder
 
-from .engine import SmartMoneyEngine
+from .engine import VolPriceEngine
 
 
 # from .template import CtaTemplate, CtaSignal, TargetPosTemplate
 #
 
-class SmartMoneyStrategyApp(BaseApp):
+class VolPriceStrategyApp(BaseApp):
     """"""
 
     app_name = APP_NAME
     app_module = __name__
     app_path = Path(__file__).parent
-    display_name = "SmartMoney策略"
-    engine_class = SmartMoneyEngine
-    widget_name = "SmartMoneyManager"
+    display_name = "量价策略"
+    engine_class = VolPriceEngine
+    widget_name = "VolPriceManager"
     icon_name = "SM.ico"

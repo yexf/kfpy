@@ -36,7 +36,6 @@ from src.trader.constant import (
     Status
 )
 from src.trader.utility import load_json, save_json
-from src.trader.database import DbTickData, DbBarData
 from src.trader.setting import SETTINGS
 
 from .base import (
@@ -63,7 +62,7 @@ STOP_STATUS_MAP = {
 }
 
 
-class SmartMoneyEngine(BaseEngine):
+class VolPriceEngine(BaseEngine):
     """"""
 
     engine_type = EngineType.LIVE  # live trading engine
@@ -72,7 +71,7 @@ class SmartMoneyEngine(BaseEngine):
     data_filename = "cta_strategy_data.json"
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
-        super(SmartMoneyEngine, self).__init__(
+        super(VolPriceEngine, self).__init__(
             main_engine, event_engine, "SmartMoneyStrategy")
 
     def init_engine(self):
