@@ -113,3 +113,16 @@ def get_config() -> dict:
     if config["mini路径"] == data_path:
         return config
     return {}
+
+
+def thread_hold():
+    import threading
+    import time
+
+    def slp():
+        while True:
+            time.sleep(0.1)
+
+    t = threading.Thread(target=slp)
+    t.start()
+    t.join()

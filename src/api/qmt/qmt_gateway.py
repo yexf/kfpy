@@ -97,26 +97,3 @@ class QmtGateway(BaseGateway):
 
     def write_log(self, msg):
         super(QmtGateway, self).write_log(f"[QMT] {msg}")
-
-
-if __name__ == '__main__':
-    event_engine = EventEngine()
-    qmt = QmtGateway(event_engine)
-    # qmt.md.get_contract()
-    qmt.subscribe(SubscribeRequest(symbol='000001', exchange=Exchange.SZSE))
-    qmt.td.connect(get_config())
-    # event_engine.register(EVENT_LOG, lambda event: print(event.data.level, event.data.msg))
-    event_engine.register(EVENT_TICK, lambda event: print(event.data))
-    event_engine.start()
-    import threading
-    import time
-
-
-    def slp():
-        while True:
-            time.sleep(0.1)
-
-
-    t = threading.Thread(target=slp)
-    t.start()
-    t.join()
