@@ -1,234 +1,160 @@
-""""""
+from abc import ABC, abstractmethod
+from datetime import datetime
+from types import ModuleType
+from typing import List
+from dataclasses import dataclass
+from importlib import import_module
 
-from peewee import SqliteDatabase, Model, CharField, DateTimeField, FloatField
-
-from .constant import Exchange, Interval
+from .constant import Interval, Exchange
 from .object import BarData, TickData
-from .utility import get_file_path
+from .setting import SETTINGS
+from .utility import ZoneInfo
+from .locale import _
 
-DB_NAME = "database.db"
-DB = SqliteDatabase(str(get_file_path(DB_NAME)))
+
+DB_TZ = ZoneInfo(SETTINGS["database.timezone"])
 
 
-class DbBarData(Model):
+def convert_tz(dt: datetime) -> datetime:
     """
-    Candlestick bar data for database storage.
-
-    Index is defined unique with vt_symbol, interval and datetime.
+    Convert timezone of datetime object to DB_TZ.
     """
-
-    symbol = CharField()
-    exchange = CharField()
-    datetime = DateTimeField()
-    interval = CharField()
-
-    volume = FloatField()
-    open_price = FloatField()
-    high_price = FloatField()
-    low_price = FloatField()
-    close_price = FloatField()
-
-    vt_symbol = CharField()
-    gateway_name = CharField()
-
-    class Meta:
-        database = DB
-        indexes = ((("vt_symbol", "interval", "datetime"), True),)
-
-    @staticmethod
-    def from_bar(bar: BarData):
-        """
-        Generate DbBarData object from BarData.
-        """
-        db_bar = DbBarData()
-
-        db_bar.symbol = bar.symbol
-        db_bar.exchange = bar.exchange.value
-        db_bar.datetime = bar.datetime
-        db_bar.interval = bar.interval.value
-        db_bar.volume = bar.volume
-        db_bar.open_price = bar.open_price
-        db_bar.high_price = bar.high_price
-        db_bar.low_price = bar.low_price
-        db_bar.close_price = bar.close_price
-        db_bar.vt_symbol = bar.vt_symbol
-        db_bar.gateway_name = "DB"
-
-        return db_bar
-
-    def to_bar(self):
-        """
-        Generate BarData object from DbBarData.
-        """
-        bar = BarData(
-            symbol=self.symbol,
-            exchange=Exchange(self.exchange),
-            datetime=self.datetime,
-            interval=Interval(self.interval),
-            volume=self.volume,
-            open_price=self.open_price,
-            high_price=self.high_price,
-            low_price=self.low_price,
-            close_price=self.close_price,
-            gateway_name=self.gateway_name,
-        )
-        return bar
+    dt: datetime = dt.astimezone(DB_TZ)
+    return dt.replace(tzinfo=None)
 
 
-class DbTickData(Model):
+@dataclass
+class BarOverview:
     """
-    Tick data for database storage.
-
-    Index is defined unique with vt_symbol, interval and datetime.
+    Overview of bar data stored in database.
     """
 
-    symbol = CharField()
-    exchange = CharField()
-    datetime = DateTimeField()
+    symbol: str = ""
+    exchange: Exchange = None
+    interval: Interval = None
+    count: int = 0
+    start: datetime = None
+    end: datetime = None
 
-    name = CharField()
-    volume = FloatField()
-    last_price = FloatField()
-    last_volume = FloatField()
-    limit_up = FloatField()
-    limit_down = FloatField()
 
-    open_price = FloatField()
-    high_price = FloatField()
-    low_price = FloatField()
-    close_price = FloatField()
+@dataclass
+class TickOverview:
+    """
+    Overview of tick data stored in database.
+    """
 
-    bid_price_1 = FloatField()
-    bid_price_2 = FloatField()
-    bid_price_3 = FloatField()
-    bid_price_4 = FloatField()
-    bid_price_5 = FloatField()
+    symbol: str = ""
+    exchange: Exchange = None
+    count: int = 0
+    start: datetime = None
+    end: datetime = None
 
-    ask_price_1 = FloatField()
-    ask_price_2 = FloatField()
-    ask_price_3 = FloatField()
-    ask_price_4 = FloatField()
-    ask_price_5 = FloatField()
 
-    bid_volume_1 = FloatField()
-    bid_volume_2 = FloatField()
-    bid_volume_3 = FloatField()
-    bid_volume_4 = FloatField()
-    bid_volume_5 = FloatField()
+class BaseDatabase(ABC):
+    """
+    Abstract database class for connecting to different database.
+    """
 
-    ask_volume_1 = FloatField()
-    ask_volume_2 = FloatField()
-    ask_volume_3 = FloatField()
-    ask_volume_4 = FloatField()
-    ask_volume_5 = FloatField()
-
-    vt_symbol = CharField()
-    gateway_name = CharField()
-
-    class Meta:
-        database = DB
-        indexes = ((("vt_symbol", "datetime"), True),)
-
-    @staticmethod
-    def from_tick(tick: TickData):
+    @abstractmethod
+    def save_bar_data(self, bars: List[BarData], stream: bool = False) -> bool:
         """
-        Generate DbTickData object from TickData.
+        Save bar data into database.
         """
-        db_tick = DbTickData()
+        pass
 
-        db_tick.symbol = tick.symbol
-        db_tick.exchange = tick.exchange.value
-        db_tick.datetime = tick.datetime
-        db_tick.name = tick.name
-        db_tick.volume = tick.volume
-        db_tick.last_price = tick.last_price
-        db_tick.last_volume = tick.last_volume
-        db_tick.limit_up = tick.limit_up
-        db_tick.limit_down = tick.limit_down
-        db_tick.open_price = tick.open_price
-        db_tick.high_price = tick.high_price
-        db_tick.low_price = tick.low_price
-        db_tick.pre_close = tick.pre_close
-
-        db_tick.bid_price_1 = tick.bid_price_1
-        db_tick.ask_price_1 = tick.ask_price_1
-        db_tick.bid_volume_1 = tick.bid_volume_1
-        db_tick.ask_volume_1 = tick.ask_volume_1
-
-        if tick.bid_price_2:
-            db_tick.bid_price_2 = tick.bid_price_2
-            db_tick.bid_price_3 = tick.bid_price_3
-            db_tick.bid_price_4 = tick.bid_price_4
-            db_tick.bid_price_5 = tick.bid_price_5
-
-            db_tick.ask_price_2 = tick.ask_price_2
-            db_tick.ask_price_3 = tick.ask_price_3
-            db_tick.ask_price_4 = tick.ask_price_4
-            db_tick.ask_price_5 = tick.ask_price_5
-
-            db_tick.bid_volume_2 = tick.bid_volume_2
-            db_tick.bid_volume_3 = tick.bid_volume_3
-            db_tick.bid_volume_4 = tick.bid_volume_4
-            db_tick.bid_volume_5 = tick.bid_volume_5
-
-            db_tick.ask_volume_2 = tick.ask_volume_2
-            db_tick.ask_volume_3 = tick.ask_volume_3
-            db_tick.ask_volume_4 = tick.ask_volume_4
-            db_tick.ask_volume_5 = tick.ask_volume_5
-
-        db_tick.vt_symbol = tick.vt_symbol
-        db_tick.gateway_name = "DB"
-
-        return tick
-
-    def to_tick(self):
+    @abstractmethod
+    def save_tick_data(self, ticks: List[TickData], stream: bool = False) -> bool:
         """
-        Generate TickData object from DbTickData.
+        Save tick data into database.
         """
-        tick = TickData(
-            symbol=self.symbol,
-            exchange=Exchange(self.exchange),
-            datetime=self.datetime,
-            name=self.name,
-            volume=self.volume,
-            last_price=self.last_price,
-            last_volume=self.last_volume,
-            limit_up=self.limit_up,
-            limit_down=self.limit_down,
-            open_price=self.open_price,
-            high_price=self.high_price,
-            low_price=self.low_price,
-            pre_close=self.pre_close,
-            bid_price_1=self.bid_price_1,
-            ask_price_1=self.ask_price_1,
-            bid_volume_1=self.bid_volume_1,
-            ask_volume_1=self.ask_volume_1,
-            gateway_name=self.gateway_name,
-        )
+        pass
 
-        if self.bid_price_2:
-            tick.bid_price_2 = self.bid_price_2
-            tick.bid_price_3 = self.bid_price_3
-            tick.bid_price_4 = self.bid_price_4
-            tick.bid_price_5 = self.bid_price_5
+    @abstractmethod
+    def load_bar_data(
+        self,
+        symbol: str,
+        exchange: Exchange,
+        interval: Interval,
+        start: datetime,
+        end: datetime
+    ) -> List[BarData]:
+        """
+        Load bar data from database.
+        """
+        pass
 
-            tick.ask_price_2 = self.ask_price_2
-            tick.ask_price_3 = self.ask_price_3
-            tick.ask_price_4 = self.ask_price_4
-            tick.ask_price_5 = self.ask_price_5
+    @abstractmethod
+    def load_tick_data(
+        self,
+        symbol: str,
+        exchange: Exchange,
+        start: datetime,
+        end: datetime
+    ) -> List[TickData]:
+        """
+        Load tick data from database.
+        """
+        pass
 
-            tick.bid_volume_2 = self.bid_volume_2
-            tick.bid_volume_3 = self.bid_volume_3
-            tick.bid_volume_4 = self.bid_volume_4
-            tick.bid_volume_5 = self.bid_volume_5
+    @abstractmethod
+    def delete_bar_data(
+        self,
+        symbol: str,
+        exchange: Exchange,
+        interval: Interval
+    ) -> int:
+        """
+        Delete all bar data with given symbol + exchange + interval.
+        """
+        pass
 
-            tick.ask_volume_2 = self.ask_volume_2
-            tick.ask_volume_3 = self.ask_volume_3
-            tick.ask_volume_4 = self.ask_volume_4
-            tick.ask_volume_5 = self.ask_volume_5
+    @abstractmethod
+    def delete_tick_data(
+        self,
+        symbol: str,
+        exchange: Exchange
+    ) -> int:
+        """
+        Delete all tick data with given symbol + exchange.
+        """
+        pass
 
-        return tick
+    @abstractmethod
+    def get_bar_overview(self) -> List[BarOverview]:
+        """
+        Return bar data avaible in database.
+        """
+        pass
+
+    @abstractmethod
+    def get_tick_overview(self) -> List[TickOverview]:
+        """
+        Return tick data avaible in database.
+        """
+        pass
 
 
-DB.connect()
-DB.create_tables([DbBarData, DbTickData])
+database: BaseDatabase = None
+
+
+def get_database() -> BaseDatabase:
+    """"""
+    # Return database object if already inited
+    global database
+    if database:
+        return database
+
+    # Read database related global setting
+    database_name: str = SETTINGS["database.name"]
+    module_name: str = f"vnpy_{database_name}"
+
+    # Try to import database module
+    try:
+        module: ModuleType = import_module(module_name)
+    except ModuleNotFoundError:
+        print(_("找不到数据库驱动{}，使用默认的SQLite数据库").format(module_name))
+        module: ModuleType = import_module("vnpy_sqlite")
+
+    # Create database object from module
+    database = module.Database()
+    return database
