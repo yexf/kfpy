@@ -1,9 +1,9 @@
-from src.api.qmt import QmtGateway
-from src.api.qmt.utils import get_config, thread_hold
+from src.gateway.qmt import QmtGateway
+from src.gateway.qmt.utils import get_config, thread_hold
 from src.event import EventEngine
-from src.trader.constant import Exchange, Direction, OrderType
+from src.trader.constant import Exchange
 from src.trader.event import EVENT_TICK
-from src.trader.object import SubscribeRequest, OrderRequest
+from src.trader.object import SubscribeRequest
 
 if __name__ == '__main__':
     event_engine = EventEngine()

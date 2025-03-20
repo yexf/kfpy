@@ -9,7 +9,7 @@ from src.event import EventEngine
 from src.trader.setting import SETTINGS
 from src.trader.engine import MainEngine, LogEngine, BaseEngine
 
-from src.api.qmt import QmtGateway
+from src.gateway.qmt import QmtGateway
 from src.app.smart_money import SmartMoneyStrategyApp, SmartMoneyEngine
 from src.app.smart_money.base import EVENT_SM_LOG
 

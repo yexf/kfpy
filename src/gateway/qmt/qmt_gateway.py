@@ -6,14 +6,12 @@
 """
 from collections import defaultdict
 from typing import Dict, List
-from src.event import Event, EventEngine
+from src.event import EventEngine
 from src.trader.event import (
     EVENT_TIMER,
-    EVENT_TICK,
-    EVENT_LOG,
 )
 from src.trader.constant import (
-    Product, Direction, OrderType, Exchange
+    Product, Exchange
 
 )
 from src.trader.gateway import BaseGateway
@@ -22,12 +20,11 @@ from src.trader.object import (
     CancelRequest,
     SubscribeRequest,
     ContractData,
-    TradeData, LogData,
-)
+    TradeData, )
 
-from src.api.qmt.md import MD
-from src.api.qmt.utils import get_config
-from src.api.qmt.td import TD
+from src.gateway.qmt.md import MD
+from src.gateway.qmt.utils import get_config
+from src.gateway.qmt.td import TD
 
 class QmtGateway(BaseGateway):
     default_setting: Dict[str, str] = {

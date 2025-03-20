@@ -11,16 +11,16 @@ import datetime
 
 from xtquant.xttrader import XtQuantTraderCallback, XtQuantTrader
 from xtquant.xttype import (
-    XtTrade, XtAsset, XtOrder, XtOrderError, XtCreditOrder, XtOrderResponse,
-    XtPosition, XtCreditDeal, XtCancelError, XtCancelOrderResponse, StockAccount
+    XtTrade, XtAsset, XtOrder, XtOrderError, XtOrderResponse,
+    XtPosition, XtCancelError, XtCancelOrderResponse, StockAccount
 )
-from src.trader.constant import Direction, Status, Product
+from src.trader.constant import Direction, Status
 from src.trader.object import (
     AccountData, TradeData, OrderData, OrderRequest, PositionData
 )
-from src.api.qmt.utils import (to_vn_product, to_vn_contract, to_qmt_code,
-                            From_VN_Trade_Type, from_vn_price_type, TO_VN_Trade_Type,
-                            timestamp_to_datetime, TO_VN_ORDER_STATUS)
+from src.gateway.qmt.utils import (to_vn_contract, to_qmt_code,
+                                   From_VN_Trade_Type, from_vn_price_type, TO_VN_Trade_Type,
+                                   timestamp_to_datetime, TO_VN_ORDER_STATUS)
 
 # qmt交易接口
 class TD(XtQuantTraderCallback):

@@ -4,4 +4,4 @@
 @Time      :2022/11/8 16:48
 @Author    :fsksf
 """
-from src.api.qmt.qmt_gateway import QmtGateway
+from src.gateway.qmt.qmt_gateway import QmtGateway
