@@ -13,7 +13,7 @@ from src.app.cta_strategy import (
 class KingKeltnerStrategy(CtaTemplate):
     """"""
 
-    author = '用Python的交易员'
+    author = "用Python的交易员"
 
     kk_length = 11
     kk_dev = 1.6
@@ -29,14 +29,12 @@ class KingKeltnerStrategy(CtaTemplate):
     short_vt_orderids = []
     vt_orderids = []
 
-    parameters = ['kk_length', 'kk_dev', 'fixed_size']
-    variables = ['kk_up', 'kk_down']
+    parameters = ["kk_length", "kk_dev", "trailing_percent", "fixed_size"]
+    variables = ["kk_up", "kk_down"]
 
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
-        super(KingKeltnerStrategy, self).__init__(
-            cta_engine, strategy_name, vt_symbol, setting
-        )
+        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
 
         self.bg = BarGenerator(self.on_bar, 5, self.on_5min_bar)
         self.am = ArrayManager()
@@ -94,17 +92,17 @@ class KingKeltnerStrategy(CtaTemplate):
             self.intra_trade_high = max(self.intra_trade_high, bar.high_price)
             self.intra_trade_low = bar.low_price
 
-            vt_orderid = self.sell(self.intra_trade_high * (1 - self.trailing_percent / 100),
-                                   abs(self.pos), True)
-            self.vt_orderids.append(vt_orderid)
+            vt_orderids = self.sell(self.intra_trade_high * (1 - self.trailing_percent / 100),
+                                    abs(self.pos), True)
+            self.vt_orderids.extend(vt_orderids)
 
         elif self.pos < 0:
             self.intra_trade_high = bar.high_price
             self.intra_trade_low = min(self.intra_trade_low, bar.low_price)
 
-            vt_orderid = self.cover(self.intra_trade_low * (1 + self.trailing_percent / 100),
-                                    abs(self.pos), True)
-            self.vt_orderids.append(vt_orderid)
+            vt_orderids = self.cover(self.intra_trade_low * (1 + self.trailing_percent / 100),
+                                     abs(self.pos), True)
+            self.vt_orderids.extend(vt_orderids)
 
         self.put_event()
 

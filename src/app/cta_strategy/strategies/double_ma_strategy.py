@@ -11,6 +11,8 @@ from src.app.cta_strategy import (
 
 
 class DoubleMaStrategy(CtaTemplate):
+    """"""
+
     author = "用Python的交易员"
 
     fast_window = 10
@@ -27,9 +29,7 @@ class DoubleMaStrategy(CtaTemplate):
 
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
-        super(DoubleMaStrategy, self).__init__(
-            cta_engine, strategy_name, vt_symbol, setting
-        )
+        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
 
         self.bg = BarGenerator(self.on_bar)
         self.am = ArrayManager()
@@ -66,6 +66,7 @@ class DoubleMaStrategy(CtaTemplate):
         """
         Callback of new bar data update.
         """
+        self.cancel_all()
 
         am = self.am
         am.update_bar(bar)

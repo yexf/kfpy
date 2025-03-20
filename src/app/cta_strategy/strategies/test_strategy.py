@@ -24,9 +24,7 @@ class TestStrategy(CtaTemplate):
 
     def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
         """"""
-        super(TestStrategy, self).__init__(
-            cta_engine, strategy_name, vt_symbol, setting
-        )
+        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
 
         self.test_funcs = [
             self.test_market_order,
@@ -73,7 +71,7 @@ class TestStrategy(CtaTemplate):
                 start = time()
                 test_func()
                 time_cost = (time() - start) * 1000
-                self.write_log("耗时%s毫秒" % (time_cost))
+                self.write_log("耗时%s毫秒") % (time_cost)
             else:
                 self.write_log("测试已全部完成")
                 self.test_all_done = True

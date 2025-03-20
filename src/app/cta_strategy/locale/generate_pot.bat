@@ -1,0 +1,1 @@
+python C:\veighna_studio\Tools\i18n\pygettext.py -o src.app.cta_strategy\locale\src.app.cta_strategy.pot  src.app.cta_strategy\*.py src.app.cta_strategy\ui\*.py src.app.cta_strategy\strategies\*.py
