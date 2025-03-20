@@ -17,17 +17,6 @@ SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
-ctp_setting = {
-    "用户名": "",
-    "密码": "",
-    "经纪商代码": "",
-    "交易服务器": "",
-    "行情服务器": "",
-    "产品名称": "",
-    "授权编码": "",
-    "产品信息": ""
-}
-
 # Chinese futures market trading period (day/night)
 DAY_START = time(9, 30)
 DAY_END = time(15, 0)
@@ -63,10 +52,10 @@ def run_child():
     event_engine.register(EVENT_SM_LOG, log_engine.process_log_event)
     main_engine.write_log("注册日志事件监听")
 
-    main_engine.connect(None, "QMT")
+    main_engine.connect({}, "QMT")
     main_engine.write_log("连接QMT接口")
 
-    sleep(10)
+    sleep(1)
 
     sm_engine.init_engine()
     main_engine.write_log("SM策略初始化完成")
