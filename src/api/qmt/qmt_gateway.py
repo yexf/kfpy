@@ -37,7 +37,7 @@ class QmtGateway(BaseGateway):
 
     TRADE_TYPE = (Product.ETF, Product.EQUITY, Product.BOND, Product.INDEX)
     exchanges = (Exchange.SSE, Exchange.SZSE)
-
+    default_name = "QMT"
     def __init__(self, event_engine: EventEngine, gateway_name: str = 'QMT'):
         super(QmtGateway, self).__init__(event_engine, gateway_name)
         self.contracts: Dict[str, ContractData] = {}
@@ -49,7 +49,10 @@ class QmtGateway(BaseGateway):
 
     def connect(self, setting: dict) -> None:
         self.md.connect(setting)
-        self.td.connect(setting)
+        if setting is None or setting == {}:
+            self.td.connect(get_config())
+        else:
+            self.td.connect(setting)
 
     def close(self) -> None:
         self.md.close()
