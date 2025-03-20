@@ -2,7 +2,7 @@ import json
 import pandas as pd
 import requests
 from data.data_tool import demjson
-from data.eastmoney_url import load_json, save_json
+from data.eastmoney_url import load_data_json, save_data_json
 
 
 def get_eastmoney_bond():
@@ -99,7 +99,7 @@ def get_eastmoney_bond():
 
 
 def get_eastmoney_url_param():
-    url_obj, url_json = load_json()
+    url_obj, url_json = load_data_json()
     host = url_obj.host
     dataview = url_obj.dataview
     url = "https:" + getattr(host.production, dataview.dataurl.hostname) + dataview.dataurl.url
@@ -143,7 +143,7 @@ def get_eastmoney_bond_all(page_size=100):
 data_df = get_eastmoney_bond()
 dict_obj = data_df.T.to_dict()
 print(len(data_df))
-save_json("conv_bond.json", dict_obj)
+save_data_json("conv_bond.json", dict_obj)
 data_df = get_eastmoney_bond_all()
 print(len(data_df))
 data_df.to_csv("可转债.csv")

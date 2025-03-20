@@ -12,7 +12,7 @@ def get_file_path(filename: str) -> Path:
     return temp_path
 
 
-def save_json(filename: str, data: dict) -> None:
+def save_data_json(filename: str, data: dict) -> None:
     """
     Save data into json file in temp path.
     """
@@ -26,7 +26,7 @@ def save_json(filename: str, data: dict) -> None:
         )
 
 
-def load_json(filename: str = "eastmoney_url.json") -> [object, dict]:
+def load_data_json(filename: str = "eastmoney_url.json") -> [object, dict]:
     """
     Load data from json file in temp path.
     """
@@ -38,5 +38,5 @@ def load_json(filename: str = "eastmoney_url.json") -> [object, dict]:
             data: object = json.loads(datastr, object_hook=lambda dic: namedtuple("X", dic.keys())(*dic.values()))
         return data, json.loads(datastr)
     else:
-        save_json(filename, {})
+        save_data_json(filename, {})
         return {}, {}

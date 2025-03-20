@@ -5,9 +5,13 @@
 @Author    :fsksf
 """
 import datetime
+import os
+
 from src.trader.object import OrderRequest
 from src.trader.constant import Exchange, Product, OrderType, Direction, Status
-from xtquant import xtconstant
+from xtquant import xtconstant, xtdata
+
+from src.trader.utility import load_json
 
 From_VN_Exchange_map = {
     Exchange.CFFEX: 'CFF',
@@ -88,3 +92,24 @@ def timestamp_to_datetime(tint):
         p = st - 10
         tint = tint / 10**p
     return datetime.datetime.fromtimestamp(tint)
+
+
+def get_data_path():
+    client = xtdata.get_client()
+    client_data_dir = client.get_data_dir()
+    data_path = os.path.abspath(os.path.dirname(client_data_dir))
+    return data_path
+
+
+def get_config() -> dict:
+    data_path = get_data_path()
+    test_config_path = "test_qmt_account.json"
+    test_config = load_json(test_config_path)
+    if test_config["mini路径"] == data_path:
+        return test_config
+
+    config_path = "qmt_account.json"
+    config = load_json(config_path)
+    if config["mini路径"] == data_path:
+        return config
+    return {}

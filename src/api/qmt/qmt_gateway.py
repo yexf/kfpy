@@ -26,9 +26,8 @@ from src.trader.object import (
 )
 
 from src.api.qmt.md import MD
+from src.api.qmt.utils import get_data_path, get_config
 from src.api.qmt.td import TD
-from src.trader.utility import load_json
-
 
 class QmtGateway(BaseGateway):
     default_setting: Dict[str, str] = {
@@ -102,14 +101,11 @@ class QmtGateway(BaseGateway):
 
 if __name__ == '__main__':
     event_engine = EventEngine()
+    print(get_data_path())
     qmt = QmtGateway(event_engine)
     qmt.subscribe(SubscribeRequest(symbol='000001', exchange=Exchange.SZSE))
     # qmt.md.get_contract()
-    test_config_path = "test_qmt_account.json"
-    test_config = load_json(test_config_path)
-    config_path = "qmt_account.json"
-    config = load_json(test_config_path)
-    qmt.td.connect(test_config)
+    qmt.td.connect(get_config())
     event_engine.register(EVENT_LOG, lambda event: print(event.data.level, event.data.msg))
     event_engine.register(EVENT_TICK, lambda event: print(event.data))
     event_engine.start()
