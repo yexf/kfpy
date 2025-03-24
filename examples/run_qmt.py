@@ -18,7 +18,7 @@ SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
 # Chinese futures market trading period (day/night)
-DAY_START = time(9, 30)
+DAY_START = time(9, 15)
 DAY_END = time(15, 0)
 
 NIGHT_START = time(20, 45)

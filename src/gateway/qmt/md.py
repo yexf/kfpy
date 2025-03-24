@@ -20,6 +20,7 @@ from .utils import (
     to_qmt_code
 )
 from src.trader.utility import load_json, save_json
+from ...trader.constant import Product
 
 
 # qmt行情接口
@@ -73,7 +74,7 @@ class MD:
         self.write_log('开始获取标的信息')
         contract_ids = set()
         bk = ['上期所', '上证A股', '上证B股', '中金所', '创业板', '大商所',
-              '沪市ETF', '沪市指数', '沪深A股',
+              '沪市ETF', '沪市指数', '沪深A股', '沪深转债',
               '沪深B股', '沪深ETF', '沪深指数', '深市ETF',
               '深市基金', '深市指数', '深证A股', '深证B股', '科创板', '科创板CDR',
               ]
@@ -95,7 +96,10 @@ class MD:
                     continue
                 if exchange not in self.gateway.exchanges:
                     continue
-                product = to_vn_product(contract_type)
+                if '沪深转债' == sector:
+                    product = Product.BOND
+                else:
+                    product = to_vn_product(contract_type)
                 if product not in self.gateway.TRADE_TYPE:
                     continue
 

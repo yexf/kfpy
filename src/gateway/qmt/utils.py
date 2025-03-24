@@ -75,6 +75,8 @@ def to_vn_product(dic: dict):
         return Product.ETF
     if 'stock' in dic and dic['stock']:
         return Product.EQUITY
+    if 'index' in dic and dic['index']:
+        return Product.INDEX
     for k, v in dic.items():
         if v:
             break
