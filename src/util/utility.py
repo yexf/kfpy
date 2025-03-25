@@ -1136,7 +1136,7 @@ def update_data(filename: str, data: Union[dict, list]) -> None:
     save_json(filename, json_dict)
 
 
-def get_data(filename: str):
+def get_data(filename: str) -> Union[dict, list]:
     json_dict = load_json(filename)
     if "data" in json_dict:
         return json_dict["data"]

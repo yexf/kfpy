@@ -1,12 +1,14 @@
 import json
+from typing import Union
 
 import pandas as pd
 import requests
+
 from src.util.data_tool import demjson
-from src.util.utility import load_util_json, is_need_update, update_data
+from src.util.utility import load_util_json, is_need_update, update_data, get_data
 
 
-def reload_columns(data_df):
+def reload_columns(data_df: pd.DataFrame) -> pd.DataFrame:
     columns_list = [
         "序号",
         "_",
@@ -63,14 +65,14 @@ def reload_columns(data_df):
     return data_df
 
 
-def get_eastmoney_bond():
+def get_eastmoney_bond() -> pd.DataFrame:
     """
     东方财富网-行情中心-债券市场-可转债
-    http://quote.eastmoney.com/center/fullscreenlist.html#convertible_comparison
+    https://quote.eastmoney.com/center/fullscreenlist.html#convertible_comparison
     :return: 可转债比价表数据
     :rtype: pandas.DataFrame
     """
-    url = "http://16.push2.eastmoney.com/api/qt/clist/get"
+    url = "https://16.push2.eastmoney.com/api/qt/clist/get"
     params = {
         "pn": "1",
         "pz": "100",
@@ -81,7 +83,8 @@ def get_eastmoney_bond():
         "invt": "2",
         "fid": "f243",
         "fs": "b:MK0354",
-        "fields": "f1,f152,f2,f3,f12,f13,f14,f227,f228,f229,f230,f231,f232,f233,f234,f235,f236,f237,f238,f239,f240,f241,f242,f26,f243",
+        "fields": "f1,f152,f2,f3,f12,f13,f14,f227,f228,f229,f230,f231,f232,f233,f234,f235,f236,f237,f238,f239,f240,"
+                  "f241,f242,f26,f243",
         "_": "1590386857527",
     }
     r = requests.get(url, params=params)
@@ -124,7 +127,7 @@ def get_eastmoney_bond_data(url, dataview, param, cb_name: str, page_num: int, p
     return r.text
 
 
-def reload_columns_all(data_df):
+def reload_columns_all(data_df: pd.DataFrame) -> pd.DataFrame:
     columns_list = ['转债代码', '交易代码', '交易市场', '转债名称',
                     '退市日期', '上市日期', '正股代码', '债券期限',
                     '评级', '-', '-', '-', '-',
@@ -157,7 +160,7 @@ def reload_columns_all(data_df):
     return data_df
 
 
-def get_eastmoney_bond_all(page_size=100):
+def get_eastmoney_bond_all(page_size=100) -> pd.DataFrame:
     temp_list = []
     url, dataview, param = get_eastmoney_url_param()
     data_text = get_eastmoney_bond_data(url, dataview, param, "", 1, page_size)
@@ -179,7 +182,7 @@ def get_eastmoney_bond_all(page_size=100):
     return reload_columns_all(ret_df)
 
 
-def update_eastmoney_bond(file_name: str):
+def update_eastmoney_bond(file_name: str) -> bool:
     if is_need_update(file_name):
         if file_name == "conv_bond_all.json":
             data_df = get_eastmoney_bond_all()
@@ -193,3 +196,10 @@ def update_eastmoney_bond(file_name: str):
             list_bond.append(dict_obj[i])
         update_data(file_name, list_bond)
     return True
+
+
+def get_bond_info(file_name: str) -> Union[dict, list]:
+    if update_eastmoney_bond(file_name):
+        return get_data(file_name)
+    else:
+        return {}

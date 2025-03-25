@@ -43,28 +43,3 @@ class VolPriceEngine(BaseEngine):
     def close(self) -> None:
         pass
 
-
-def to_rq_symbol(vt_symbol: str):
-    """
-    CZCE product of RQData has symbol like "TA1905" while
-    vt symbol is "TA905.CZCE" so need to add "1" in symbol.
-    """
-    symbol, exchange_str = vt_symbol.split(".")
-    if exchange_str != "CZCE":
-        return symbol.upper()
-
-    for count, word in enumerate(symbol):
-        if word.isdigit():
-            break
-
-    product = symbol[:count]
-    year = symbol[count]
-    month = symbol[count + 1:]
-
-    if year == "9":
-        year = "1" + year
-    else:
-        year = "2" + year
-
-    rq_symbol = f"{product}{year}{month}".upper()
-    return rq_symbol
