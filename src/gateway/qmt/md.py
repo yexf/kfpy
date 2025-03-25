@@ -44,25 +44,25 @@ class MD:
     def connect(self, setting: dict) -> None:
         current_date = str(datetime.now().date())
         json_file = "qmt_contract.json"
-        contract = load_json(json_file)
+        contract: dict = load_json(json_file)
         if "date" in contract and contract["date"] == current_date:
             def dict_to_dataclass(cls, data):
                 return cls(**data)
             contract_data = contract["data"]
             for key in contract_data:
-                contract = dict_to_dataclass(ContractData, contract_data[key])
-                self.gateway.contracts[key] = contract
+                contract: ContractData = dict_to_dataclass(ContractData, contract_data[key])
+                self.gateway.contracts[contract.vt_symbol] = contract
         else:
             self.get_contract()
             contract_data = {}
             for key in self.gateway.contracts:
-                value = self.gateway.contracts[key]
-                contract_data[key] = asdict(value)
-                del contract_data[key]['extra']
-                exchange = contract_data[key]["exchange"]
-                product = contract_data[key]["product"]
-                contract_data[key]["exchange"] = exchange.value
-                contract_data[key]["product"] = product.value
+                value: ContractData = self.gateway.contracts[key]
+                contract_data[value.symbol] = asdict(value)
+                del contract_data[value.symbol]['extra']
+                exchange = contract_data[value.symbol]["exchange"]
+                product = contract_data[value.symbol]["product"]
+                contract_data[value.symbol]["exchange"] = exchange.value
+                contract_data[value.symbol]["product"] = product.value
             contract["data"] = contract_data
             contract["date"] = current_date
             save_json(json_file, contract)
@@ -108,8 +108,8 @@ class MD:
                     name=info['InstrumentName'],
                     product=product,
                     pricetick=info['PriceTick'],
-                    size=100,
-                    min_volume=100
+                    size=int(10000 * info['PriceTick']),
+                    min_volume=int(10000 * info['PriceTick'])
                 )
                 self.limit_ups[c.vt_symbol] = info['UpStopPrice']
                 self.limit_downs[c.vt_symbol] = info['DownStopPrice']

@@ -3,7 +3,64 @@ import json
 import pandas as pd
 import requests
 from src.util.data_tool import demjson
-from src.util.utility import load_util_json
+from src.util.utility import load_util_json, is_need_update, update_data
+
+
+def reload_columns(data_df):
+    columns_list = [
+        "序号",
+        "_",
+        "转债最新价",
+        "转债涨跌幅",
+        "转债代码",
+        "_",
+        "转债名称",
+        "上市日期",
+        "_",
+        "纯债价值",
+        "_",
+        "正股最新价",
+        "正股涨跌幅",
+        "_",
+        "正股代码",
+        "_",
+        "正股名称",
+        "转股价",
+        "转股价值",
+        "转股溢价率",
+        "纯债溢价率",
+        "回售触发价",
+        "强赎触发价",
+        "到期赎回价",
+        "开始转股日",
+        "申购日期",
+    ]
+    data_df.columns = columns_list
+    data_df = data_df[
+        [
+            "序号",
+            "转债代码",
+            "转债名称",
+            "转债最新价",
+            "转债涨跌幅",
+            "正股代码",
+            "正股名称",
+            "正股最新价",
+            "正股涨跌幅",
+            "转股价",
+            "转股价值",
+            "转股溢价率",
+            "纯债溢价率",
+            "回售触发价",
+            "强赎触发价",
+            "到期赎回价",
+            "纯债价值",
+            "开始转股日",
+            "上市日期",
+            "申购日期",
+        ]
+    ]
+    return data_df
 
 
 def get_eastmoney_bond():
@@ -44,59 +101,7 @@ def get_eastmoney_bond():
     temp_df = pd.concat(temp_list)
     temp_df.reset_index(inplace=True)
     temp_df["index"] = range(1, len(temp_df) + 1)
-    temp_df.columns = [
-        "序号",
-        "_",
-        "转债最新价",
-        "转债涨跌幅",
-        "转债代码",
-        "_",
-        "转债名称",
-        "上市日期",
-        "_",
-        "纯债价值",
-        "_",
-        "正股最新价",
-        "正股涨跌幅",
-        "_",
-        "正股代码",
-        "_",
-        "正股名称",
-        "转股价",
-        "转股价值",
-        "转股溢价率",
-        "纯债溢价率",
-        "回售触发价",
-        "强赎触发价",
-        "到期赎回价",
-        "开始转股日",
-        "申购日期",
-    ]
-    temp_df = temp_df[
-        [
-            "序号",
-            "转债代码",
-            "转债名称",
-            "转债最新价",
-            "转债涨跌幅",
-            "正股代码",
-            "正股名称",
-            "正股最新价",
-            "正股涨跌幅",
-            "转股价",
-            "转股价值",
-            "转股溢价率",
-            "纯债溢价率",
-            "回售触发价",
-            "强赎触发价",
-            "到期赎回价",
-            "纯债价值",
-            "开始转股日",
-            "上市日期",
-            "申购日期",
-        ]
-    ]
-    return temp_df
+    return reload_columns(temp_df)
 
 
 def get_eastmoney_url_param():
@@ -119,6 +124,39 @@ def get_eastmoney_bond_data(url, dataview, param, cb_name: str, page_num: int, p
     return r.text
 
 
+def reload_columns_all(data_df):
+    columns_list = ['转债代码', '交易代码', '交易市场', '转债名称',
+                    '退市日期', '上市日期', '正股代码', '债券期限',
+                    '评级', '-', '-', '-', '-',
+                    '付息日', '-', '-',
+                    '发行规模', '-', '-', '-',
+                    '-', '-', '-', '-',
+                    '-', '-', '-',
+                    '-', '-', '-',
+                    '-', '-', '-',
+                    '申购日期', '申购代码', '申购名称',
+                    '中签日', '-', '正股名称',
+                    '每股配售额', '-', '中签率',
+                    '-', '转股结束日', '转股开始日',
+                    '-', '-', '-', '正股价',
+                    '转股价', '转股价值', '债现价',
+                    '转股溢价率', '-', '-',
+                    '-', '-', '-', '-',
+                    '-', '-', '-', '-',
+                    '-', '-', '-', '-',
+                    '-', '每中一签获利']
+    data_df.columns = columns_list
+    data_df = data_df[['转债代码', '交易代码', '交易市场', '转债名称',
+                       '退市日期', '上市日期', '债券期限',
+                       '评级', '付息日', '发行规模', '正股代码', '正股名称',
+                       '申购日期', '申购代码', '申购名称',
+                       '中签日', '每股配售额', '中签率',
+                       '转股结束日', '转股开始日', '正股价',
+                       '转股价', '转股价值', '债现价',
+                       '转股溢价率', '每中一签获利']]
+    return data_df
+
+
 def get_eastmoney_bond_all(page_size=100):
     temp_list = []
     url, dataview, param = get_eastmoney_url_param()
@@ -138,4 +176,20 @@ def get_eastmoney_bond_all(page_size=100):
         temp_list.append(temp_df)
     ret_df = pd.concat(temp_list)
     ret_df.reset_index(drop=True, inplace=True)
-    return ret_df
+    return reload_columns_all(ret_df)
+
+
+def update_eastmoney_bond(file_name: str):
+    if is_need_update(file_name):
+        if file_name == "conv_bond_all.json":
+            data_df = get_eastmoney_bond_all()
+        elif file_name == "conv_bond.json":
+            data_df = get_eastmoney_bond()
+        else:
+            return False
+        dict_obj = data_df.T.to_dict()
+        list_bond = []
+        for i in dict_obj:
+            list_bond.append(dict_obj[i])
+        update_data(file_name, list_bond)
+    return True

@@ -1130,7 +1130,7 @@ def is_need_update(filename: str):
         return True
 
 
-def update_data(filename: str, data: dict) -> None:
+def update_data(filename: str, data: Union[dict, list]) -> None:
     current_date = str(datetime.now().date())
     json_dict = {"data": data, "date": current_date}
     save_json(filename, json_dict)
