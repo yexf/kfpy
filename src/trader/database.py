@@ -8,7 +8,7 @@ from importlib import import_module
 from .constant import Interval, Exchange
 from .object import BarData, TickData
 from .setting import SETTINGS
-from .utility import ZoneInfo
+from src.util.utility import ZoneInfo
 from .locale import _
 
 

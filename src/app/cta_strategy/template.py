@@ -4,7 +4,7 @@ from typing import Any, Callable, List
 
 from src.trader.constant import Interval, Direction, Offset
 from src.trader.object import BarData, TickData, OrderData, TradeData
-from src.trader.utility import virtual
+from src.util.utility import virtual
 
 from .base import StopOrder, EngineType
 

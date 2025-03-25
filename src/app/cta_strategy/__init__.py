@@ -26,9 +26,6 @@ from typing import Type
 
 import importlib_metadata
 from src.trader.app import BaseApp
-from src.trader.constant import Direction
-from src.trader.object import TickData, BarData, TradeData, OrderData
-from src.trader.utility import BarGenerator, ArrayManager
 
 from .base import APP_NAME, StopOrder
 from .engine import CtaEngine

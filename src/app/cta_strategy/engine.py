@@ -37,7 +37,7 @@ from src.trader.constant import (
     Offset,
     Status
 )
-from src.trader.utility import load_json, save_json, extract_vt_symbol, round_to
+from src.util.utility import load_json, save_json, extract_vt_symbol, round_to
 from src.trader.database import BaseDatabase, get_database, DB_TZ
 from src.trader.datafeed import BaseDatafeed, get_datafeed
 

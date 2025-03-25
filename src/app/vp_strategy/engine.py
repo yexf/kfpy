@@ -1,51 +1,14 @@
 """"""
 
-import importlib
-import os
-import traceback
-from collections import defaultdict
-from pathlib import Path
-from typing import Any, Callable
-from datetime import datetime, timedelta
-from threading import Thread
-from queue import Queue
-from copy import copy
-
-from src.event import Event, EventEngine
+from src.event import EventEngine
 from src.trader.engine import BaseEngine, MainEngine
-from src.trader.object import (
-    OrderRequest,
-    SubscribeRequest,
-    LogData,
-    TickData,
-    BarData,
-    ContractData
-)
-from src.trader.event import (
-    EVENT_TICK,
-    EVENT_ORDER,
-    EVENT_TRADE,
-    EVENT_POSITION
-)
 from src.trader.constant import (
-    Direction,
-    OrderType,
-    Interval,
-    Exchange,
-    Offset,
     Status
 )
-from src.trader.utility import load_json, save_json
-from src.trader.setting import SETTINGS
 
 from .base import (
-    EVENT_SM_LOG,
-    EVENT_SM_STRATEGY,
-    EVENT_SM_STOPORDER,
     EngineType,
-    StopOrder,
-    StopOrderStatus,
-    STOPORDER_PREFIX
+    StopOrderStatus
 )
 
 # from .template import CtaTemplate

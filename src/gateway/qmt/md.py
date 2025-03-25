@@ -8,18 +8,16 @@ from dataclasses import asdict
 from datetime import datetime
 
 from src.trader.object import (
-    CancelRequest, OrderRequest, SubscribeRequest, TickData,
+    SubscribeRequest, TickData,
     ContractData
 )
 import xtquant.xtdata
 import xtquant.xttrader
 import xtquant.xttype
 from .utils import (
-    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_contract,
-    TO_VN_Product, to_vn_product, timestamp_to_datetime,
-    to_qmt_code
+    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime
 )
-from src.trader.utility import load_json, save_json
+from src.util.utility import load_json, save_json
 from ...trader.constant import Product
 
 

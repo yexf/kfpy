@@ -16,7 +16,7 @@ from peewee import (
 
 from src.trader.constant import Exchange, Interval
 from src.trader.object import BarData, TickData
-from src.trader.utility import get_file_path
+from src.util.utility import get_file_path
 from src.trader.database import (
     BaseDatabase,
     BarOverview,

@@ -11,7 +11,7 @@ from src.trader.object import OrderRequest
 from src.trader.constant import Exchange, Product, OrderType, Direction, Status
 from xtquant import xtconstant, xtdata
 
-from src.trader.utility import load_json
+from src.util.utility import load_json
 xtdata.enable_hello = False
 From_VN_Exchange_map = {
     Exchange.CFFEX: 'CFF',
