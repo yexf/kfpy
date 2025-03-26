@@ -1172,12 +1172,12 @@ class AboutDialog(QtWidgets.QDialog):
         text: str = f"""
             By Traders, For Traders.
 
-            Created by VeighNa Technology
+            Created by KunFu Technology
 
 
             License：MIT
-            Website：www.vnpy.com
-            Github：www.github.com/vnpy/vnpy
+            Website：
+            Github：
 
 
             KunFu - {kfpy_version}
