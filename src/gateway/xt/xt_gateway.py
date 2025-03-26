@@ -21,9 +21,9 @@ from xtquant.xttype import (
 )
 from filelock import FileLock, Timeout
 
-from vnpy.event import EventEngine, EVENT_TIMER
-from vnpy.trader.gateway import BaseGateway
-from vnpy.trader.object import (
+from src.event import EventEngine, EVENT_TIMER
+from src.trader.gateway import BaseGateway
+from src.trader.object import (
     OrderRequest,
     CancelRequest,
     SubscribeRequest,
@@ -40,15 +40,16 @@ from vnpy.trader.object import (
     TradeData,
     Offset
 )
-from vnpy.trader.constant import (
+from src.trader.constant import (
     Exchange,
     Product
 )
-from vnpy.trader.utility import (
+from src.trader.utility import (
     ZoneInfo,
     get_file_path,
     round_to
 )
+from src.util.utility import get_qmt_config
 
 # 交易所映射
 EXCHANGE_VT2XT: dict[Exchange, str] = {
@@ -169,9 +170,15 @@ class XtGateway(BaseGateway):
 
         self.trading = setting["仿真交易"] == "是"
         if self.trading:
-            path: str = setting["QMT路径"] + "\\userdata"
+            if setting["资金账号"] == '':
+                xt_config = get_qmt_config()
+                path: str = xt_config["mini路径"]
 
-            accountid: str = setting["资金账号"]
+                accountid: str = xt_config["交易账号"]
+            else:
+                path: str = setting["QMT路径"] + "\\userdata"
+
+                accountid: str = setting["资金账号"]
 
             if setting["账号类型"] == "股票":
                 account_type: str = "STOCK"
@@ -342,7 +349,8 @@ class XtMdApi:
             return
 
         try:
-            self.init_xtdc()
+            if self.token != '':
+                self.init_xtdc()
 
             # 尝试查询合约信息，确认连接成功
             xtdata.get_instrument_detail("000001.SZ")

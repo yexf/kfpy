@@ -15,8 +15,9 @@ import xtquant.xtdata
 import xtquant.xttrader
 import xtquant.xttype
 from .utils import (
-    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime, dict_conv_contract, contract_to_dict
+    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime
 )
+from ...util.utility import dict_conv_contract, contract_to_dict
 from ...trader.utility import load_json, save_json
 from ...trader.constant import Product
 

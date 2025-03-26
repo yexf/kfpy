@@ -27,7 +27,7 @@ from .widget import (
     GlobalDialog
 )
 from ..engine import MainEngine, BaseApp
-from ...util.utility import get_icon_path, TRADER_DIR
+from ..utility import get_icon_path, TRADER_DIR
 from ..locale import _
 
 

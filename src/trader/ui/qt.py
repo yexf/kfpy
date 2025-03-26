@@ -10,7 +10,7 @@ import qdarkstyle
 from PySide6 import QtGui, QtWidgets, QtCore
 
 from ..setting import SETTINGS
-from ...util.utility import get_icon_path
+from ..utility import get_icon_path
 from ..locale import _
 
 

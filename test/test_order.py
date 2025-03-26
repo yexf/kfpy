@@ -1,5 +1,5 @@
 from src.gateway.qmt import QmtGateway
-from src.gateway.qmt.utils import get_config, thread_hold
+from src.util.utility import get_qmt_config, thread_hold
 from src.event import EventEngine
 from src.trader.constant import Exchange
 from src.trader.event import EVENT_TICK
@@ -10,7 +10,7 @@ if __name__ == '__main__':
     qmt = QmtGateway(event_engine)
     # qmt.md.get_contract()
     qmt.subscribe(SubscribeRequest(symbol='000001', exchange=Exchange.SZSE))
-    qmt.td.connect(get_config())
+    qmt.td.connect(get_qmt_config())
     # event_engine.register(EVENT_LOG, lambda event: print(event.data.level, event.data.msg))
     event_engine.register(EVENT_TICK, lambda event: print(event.data))
     event_engine.start()

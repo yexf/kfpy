@@ -23,7 +23,7 @@ from src.trader.object import (
     TradeData, )
 
 from src.gateway.qmt.md import MD
-from src.gateway.qmt.utils import get_config
+from src.util.utility import get_qmt_config
 from src.gateway.qmt.td import TD
 
 class QmtGateway(BaseGateway):
@@ -47,7 +47,7 @@ class QmtGateway(BaseGateway):
     def connect(self, setting: dict) -> None:
         self.md.connect(setting)
         if setting is None or setting == {}:
-            self.td.connect(get_config())
+            self.td.connect(get_qmt_config())
         else:
             self.td.connect(setting)
 

@@ -3,10 +3,18 @@ General utility functions.
 """
 
 import json
+import os
 from collections import namedtuple
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Union
+
+from xtquant import xtdata
+
+from src.trader.object import ContractData
+from src.trader.utility import load_json, save_json
+
 
 def get_util_file_path(filename: str) -> Path:
     current_script_path = Path(__file__).resolve()
@@ -68,3 +76,55 @@ def get_data(filename: str) -> Union[dict, list]:
         return json_dict["data"]
     else:
         return {}
+
+
+def get_data_path():
+    client = xtdata.get_client()
+    client_data_dir = client.get_data_dir()
+    data_path = os.path.abspath(os.path.dirname(client_data_dir))
+    return data_path
+
+
+def get_qmt_config() -> dict:
+    data_path = get_data_path()
+    test_config_path = "test_qmt_account.json"
+    test_config = load_json(test_config_path)
+    if test_config["mini路径"] == data_path:
+        return test_config
+
+    config_path = "qmt_account.json"
+    config = load_json(config_path)
+    if config["mini路径"] == data_path:
+        return config
+    return {}
+
+
+def thread_hold():
+    import threading
+    import time
+
+    def slp():
+        while True:
+            time.sleep(0.1)
+
+    t = threading.Thread(target=slp)
+    t.start()
+    t.join()
+
+
+def dict_conv_contract(contract_dict: dict) -> ContractData:
+    def dict_to_dataclass(cls, data):
+        return cls(**data)
+
+    contract: ContractData = dict_to_dataclass(ContractData, contract_dict)
+    return contract
+
+
+def contract_to_dict(contract: ContractData) -> dict:
+    contract_dict = asdict(contract)
+    del contract_dict['extra']
+    exchange = contract_dict["exchange"]
+    product = contract_dict["product"]
+    contract_dict["exchange"] = exchange.value
+    contract_dict["product"] = product.value
+    return contract_dict
