@@ -170,14 +170,12 @@ class XtGateway(BaseGateway):
 
         self.trading = setting["仿真交易"] == "是"
         if self.trading:
-            if setting["资金账号"] == '':
+            if token == '':
                 xt_config = get_qmt_config()
                 path: str = xt_config["mini路径"]
-
                 accountid: str = xt_config["交易账号"]
             else:
                 path: str = setting["QMT路径"] + "\\userdata"
-
                 accountid: str = setting["资金账号"]
 
             if setting["账号类型"] == "股票":

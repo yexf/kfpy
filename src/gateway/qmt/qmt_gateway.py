@@ -46,13 +46,14 @@ class QmtGateway(BaseGateway):
 
     def connect(self, setting: dict) -> None:
         self.md.connect(setting)
-        if setting is None or setting == {}:
+        if setting is None or setting == {} or setting["交易账号"] == '':
             self.td.connect(get_qmt_config())
         else:
             self.td.connect(setting)
 
     def close(self) -> None:
         self.md.close()
+        self.td.close()
 
     def subscribe(self, req: SubscribeRequest) -> None:
         return self.md.subscribe(req)

@@ -4,7 +4,7 @@ from src.trader.ui import MainWindow, create_qapp
 
 from src.gateway.xt import XtGateway
 from src.app.datamanager import DataManagerApp
-
+from src.gateway.qmt import QmtGateway
 
 # 配置datafeed相关信息，也可以通过vt_setting.json全局文件配置
 # from vnpy.trader.setting import SETTINGS
@@ -20,6 +20,7 @@ def main():
     event_engine = EventEngine()
     main_engine = MainEngine(event_engine)
     main_engine.add_gateway(XtGateway)
+    main_engine.add_gateway(QmtGateway)
     main_engine.add_app(DataManagerApp)
 
     main_window = MainWindow(main_engine, event_engine)
