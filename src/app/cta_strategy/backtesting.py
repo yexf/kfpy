@@ -36,7 +36,7 @@ from .base import (
     INTERVAL_DELTA_MAP
 )
 from .template import CtaTemplate
-from .locale import _
+from src.util.utility import locate as _
 
 
 class BacktestingEngine:

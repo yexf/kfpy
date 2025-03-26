@@ -25,7 +25,7 @@ from src.app.cta_strategy.backtesting import (
     OptimizationSetting,
     BacktestingMode
 )
-from .locale import _
+from src.util.utility import locate as _
 
 APP_NAME = "CtaBacktester"
 

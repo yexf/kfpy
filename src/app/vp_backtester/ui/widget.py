@@ -19,7 +19,7 @@ from src.trader.object import BarData, TradeData, OrderData
 from src.trader.database import DB_TZ
 from src.app.cta_strategy.backtesting import DailyResult
 
-from ..locale import _
+from src.util.utility import locate as _
 from ..engine import (
     APP_NAME,
     EVENT_BACKTESTER_LOG,
