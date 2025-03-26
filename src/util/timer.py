@@ -1,7 +1,7 @@
 import time
 from typing import Union
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def timestamp_us(dt):
@@ -65,3 +65,37 @@ def from_date(timestr) -> datetime:
 def from_timetag(timestr):
     local_datetime = datetime.strptime(timestr, "%Y%m%d %H:%M:%S")
     return timestamp_s(local_datetime)
+
+
+def get_datatime(date: datetime, mode="open1") -> datetime:
+    begin = datetime(date.year, date.month, date.day)
+    td1 = timedelta(hours=9, minutes=0)
+    td2 = timedelta(hours=9, minutes=30)
+    td3 = timedelta(hours=11, minutes=30)
+    td4 = timedelta(hours=13, minutes=00)
+    td5 = timedelta(hours=15, minutes=00)
+    td6 = timedelta(hours=16, minutes=00)
+    td7 = timedelta(hours=10, minutes=00)
+    td8 = timedelta(hours=9, minutes=25)
+    td9 = timedelta(hours=9, minutes=26)
+    if mode == "start":
+        return begin + td1
+    elif mode == "open0":
+        return begin + td8
+    elif mode == "close0":
+        return begin + td9
+    elif mode == "end":
+        return begin + td6
+    elif mode == "open1":
+        return begin + td2
+    elif mode == "open2":
+        return begin + td4
+    elif mode == "close1":
+        return begin + td3
+    elif mode == "clean":
+        return begin + td7
+    elif mode == "close2":
+        return begin + td5
+    else:
+        return date
+

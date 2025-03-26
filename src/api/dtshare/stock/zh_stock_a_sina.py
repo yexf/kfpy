@@ -15,7 +15,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-from ...dtshare.stock.cons import (zh_sina_a_stock_payload,
+from src.api.dtshare.stock.cons import (zh_sina_a_stock_payload,
                                 zh_sina_a_stock_url,
                                 zh_sina_a_stock_count_url,
                                 zh_sina_a_stock_hist_url,
@@ -80,7 +80,7 @@ def stock_zh_a_spot():
     3758  15:00:00  540.496  3.023  1.433045e+05  1.433045e+05        0.85167
     3759  15:00:07   -6.264  1.465  2.430397e+06  2.430397e+06        0.40782
     """
-    big_df = pd.DataFrame()
+    big_df = []
     page_count = get_zh_a_page_count()
     zh_sina_stock_payload_copy = zh_sina_a_stock_payload.copy()
     for page in tqdm(range(1, page_count+1), desc="Please wait for a moment"):
@@ -89,8 +89,8 @@ def stock_zh_a_spot():
             zh_sina_a_stock_url,
             params=zh_sina_stock_payload_copy)
         data_json = demjson.decode(res.text)
-        big_df = big_df.append(pd.DataFrame(data_json), ignore_index=True)
-    return big_df
+        big_df.append(pd.DataFrame(data_json))
+    return pd.concat(big_df)
 
 
 def stock_zh_a_daily(symbol="sh600000", factor=""):

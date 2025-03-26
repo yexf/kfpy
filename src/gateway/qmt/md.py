@@ -15,7 +15,7 @@ import xtquant.xtdata
 import xtquant.xttrader
 import xtquant.xttype
 from .utils import (
-    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime
+    From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime, dict_conv_contract, contract_to_dict
 )
 from src.util.utility import load_json, save_json
 from ...trader.constant import Product
@@ -44,28 +44,21 @@ class MD:
     def connect(self, setting: dict) -> None:
         current_date = str(datetime.now().date())
         json_file = "qmt_contract.json"
-        contract: dict = load_json(json_file)
-        if "date" in contract and contract["date"] == current_date:
-            def dict_to_dataclass(cls, data):
-                return cls(**data)
-            contract_data = contract["data"]
+        contract_dict: dict = load_json(json_file)
+        if "date" in contract_dict and contract_dict["date"] == current_date:
+            contract_data = contract_dict["data"]
             for key in contract_data:
-                contract: ContractData = dict_to_dataclass(ContractData, contract_data[key])
+                contract = dict_conv_contract(contract_data[key])
                 self.gateway.contracts[contract.vt_symbol] = contract
         else:
             self.get_contract()
             contract_data = {}
             for key in self.gateway.contracts:
                 value: ContractData = self.gateway.contracts[key]
-                contract_data[value.symbol] = asdict(value)
-                del contract_data[value.symbol]['extra']
-                exchange = contract_data[value.symbol]["exchange"]
-                product = contract_data[value.symbol]["product"]
-                contract_data[value.symbol]["exchange"] = exchange.value
-                contract_data[value.symbol]["product"] = product.value
-            contract["data"] = contract_data
-            contract["date"] = current_date
-            save_json(json_file, contract)
+                contract_data[value.symbol] = contract_to_dict(value)
+            contract_dict["data"] = contract_data
+            contract_dict["date"] = current_date
+            save_json(json_file, contract_dict)
         return
 
     def get_contract(self):

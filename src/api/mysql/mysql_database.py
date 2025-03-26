@@ -79,7 +79,7 @@ class DbTickData(Model):
 
     symbol: str = CharField()
     exchange: str = CharField()
-    datetime: datetime = DateTimeMillisecondField()
+    datetime: datetime = DateTimeField()
 
     name: str = CharField()
     volume: float = DoubleField()
@@ -119,7 +119,7 @@ class DbTickData(Model):
     ask_volume_4: float = DoubleField(null=True)
     ask_volume_5: float = DoubleField(null=True)
 
-    localtime: datetime = DateTimeMillisecondField(null=True)
+    localtime: datetime = DateTimeField(null=True)
 
     class Meta:
         database: PeeweeMySQLDatabase = db
@@ -169,8 +169,9 @@ class MysqlDatabase(BaseDatabase):
 
         # 如果数据表不存在，则执行创建初始化
         if not DbBarData.table_exists():
-            self.db.create_tables([DbBarData, DbTickData, DbBarOverview, DbTickOverview])
-
+            self.db.create_tables([DbBarData, DbBarOverview])
+        if not DbTickData.table_exists():
+            self.db.create_tables([DbTickData, DbTickOverview])
     def save_bar_data(self, bars: List[BarData], stream: bool = False) -> bool:
         """保存K线数据"""
         # 读取主键参数

@@ -104,7 +104,7 @@ def get_eastmoney_bond() -> pd.DataFrame:
     temp_df = pd.concat(temp_list)
     temp_df.reset_index(inplace=True)
     temp_df["index"] = range(1, len(temp_df) + 1)
-    return reload_columns(temp_df)
+    return temp_df
 
 
 def get_eastmoney_url_param():
@@ -179,15 +179,17 @@ def get_eastmoney_bond_all(page_size=100) -> pd.DataFrame:
         temp_list.append(temp_df)
     ret_df = pd.concat(temp_list)
     ret_df.reset_index(drop=True, inplace=True)
-    return reload_columns_all(ret_df)
+    return ret_df
 
 
 def update_eastmoney_bond(file_name: str) -> bool:
     if is_need_update(file_name):
         if file_name == "conv_bond_all.json":
             data_df = get_eastmoney_bond_all()
+            data_df = reload_columns_all(data_df)
         elif file_name == "conv_bond.json":
             data_df = get_eastmoney_bond()
+            data_df = reload_columns(data_df)
         else:
             return False
         dict_obj = data_df.T.to_dict()

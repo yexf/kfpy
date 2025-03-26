@@ -6,12 +6,14 @@
 """
 import datetime
 import os
+from dataclasses import asdict
 
-from src.trader.object import OrderRequest
+from src.trader.object import OrderRequest, ContractData
 from src.trader.constant import Exchange, Product, OrderType, Direction, Status
 from xtquant import xtconstant, xtdata
 
 from src.util.utility import load_json
+
 xtdata.enable_hello = False
 From_VN_Exchange_map = {
     Exchange.CFFEX: 'CFF',
@@ -24,15 +26,12 @@ From_VN_Exchange_map = {
 
 TO_VN_Exchange_map = {v: k for k, v in From_VN_Exchange_map.items()}
 
-
 From_VN_Trade_Type = {
     Direction.LONG: xtconstant.STOCK_BUY,
     Direction.SHORT: xtconstant.STOCK_SELL,
 }
 
-
 TO_VN_Trade_Type = {v: k for k, v in From_VN_Trade_Type.items()}
-
 
 TO_VN_ORDER_STATUS = {
     xtconstant.ORDER_UNREPORTED: Status.SUBMITTING,
@@ -92,7 +91,7 @@ def timestamp_to_datetime(tint):
     st = len(str(tint))
     if st != 10:
         p = st - 10
-        tint = tint / 10**p
+        tint = tint / 10 ** p
     return datetime.datetime.fromtimestamp(tint)
 
 
@@ -128,3 +127,21 @@ def thread_hold():
     t = threading.Thread(target=slp)
     t.start()
     t.join()
+
+
+def dict_conv_contract(contract_dict: dict) -> ContractData:
+    def dict_to_dataclass(cls, data):
+        return cls(**data)
+
+    contract: ContractData = dict_to_dataclass(ContractData, contract_dict)
+    return contract
+
+
+def contract_to_dict(contract: ContractData) -> dict:
+    contract_dict = asdict(contract)
+    del contract_dict['extra']
+    exchange = contract_dict["exchange"]
+    product = contract_dict["product"]
+    contract_dict["exchange"] = exchange.value
+    contract_dict["product"] = product.value
+    return contract_dict
