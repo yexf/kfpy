@@ -16,6 +16,10 @@ from src.trader.object import ContractData
 from src.trader.utility import load_json, save_json
 
 
+def locate(word):
+    return word
+
+
 def get_util_file_path(filename: str) -> Path:
     current_script_path = Path(__file__).resolve()
 

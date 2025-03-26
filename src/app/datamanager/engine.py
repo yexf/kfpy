@@ -5,7 +5,7 @@ from typing import List, Optional, Callable
 from src.trader.engine import BaseEngine, MainEngine, EventEngine
 from src.trader.constant import Interval, Exchange
 from src.trader.object import BarData, TickData, ContractData, HistoryRequest
-from src.trader.database import BaseDatabase, get_database, BarOverview, DB_TZ
+from src.trader.database import BaseDatabase, get_database, BarOverview, DB_TZ, TickOverview
 from src.trader.datafeed import BaseDatafeed, get_datafeed
 from src.trader.utility import ZoneInfo
 
@@ -16,9 +16,9 @@ class ManagerEngine(BaseEngine):
     """"""
 
     def __init__(
-        self,
-        main_engine: MainEngine,
-        event_engine: EventEngine,
+            self,
+            main_engine: MainEngine,
+            event_engine: EventEngine,
     ) -> None:
         """"""
         super().__init__(main_engine, event_engine, APP_NAME)
@@ -27,21 +27,21 @@ class ManagerEngine(BaseEngine):
         self.datafeed: BaseDatafeed = get_datafeed()
 
     def import_data_from_csv(
-        self,
-        file_path: str,
-        symbol: str,
-        exchange: Exchange,
-        interval: Interval,
-        tz_name: str,
-        datetime_head: str,
-        open_head: str,
-        high_head: str,
-        low_head: str,
-        close_head: str,
-        volume_head: str,
-        turnover_head: str,
-        open_interest_head: str,
-        datetime_format: str
+            self,
+            file_path: str,
+            symbol: str,
+            exchange: Exchange,
+            interval: Interval,
+            tz_name: str,
+            datetime_head: str,
+            open_head: str,
+            high_head: str,
+            low_head: str,
+            close_head: str,
+            volume_head: str,
+            turnover_head: str,
+            open_interest_head: str,
+            datetime_format: str
     ) -> tuple:
         """"""
         with open(file_path, "rt") as f:
@@ -94,13 +94,13 @@ class ManagerEngine(BaseEngine):
         return start, end, count
 
     def output_data_to_csv(
-        self,
-        file_path: str,
-        symbol: str,
-        exchange: Exchange,
-        interval: Interval,
-        start: datetime,
-        end: datetime
+            self,
+            file_path: str,
+            symbol: str,
+            exchange: Exchange,
+            interval: Interval,
+            start: datetime,
+            end: datetime
     ) -> bool:
         """"""
         bars: List[BarData] = self.load_bar_data(symbol, exchange, interval, start, end)
@@ -146,13 +146,17 @@ class ManagerEngine(BaseEngine):
         """"""
         return self.database.get_bar_overview()
 
+    def get_tick_overview(self) -> List[TickOverview]:
+        """"""
+        return self.database.get_tick_overview()
+
     def load_bar_data(
-        self,
-        symbol: str,
-        exchange: Exchange,
-        interval: Interval,
-        start: datetime,
-        end: datetime
+            self,
+            symbol: str,
+            exchange: Exchange,
+            interval: Interval,
+            start: datetime,
+            end: datetime
     ) -> List[BarData]:
         """"""
         bars: List[BarData] = self.database.load_bar_data(
@@ -166,10 +170,10 @@ class ManagerEngine(BaseEngine):
         return bars
 
     def delete_bar_data(
-        self,
-        symbol: str,
-        exchange: Exchange,
-        interval: Interval
+            self,
+            symbol: str,
+            exchange: Exchange,
+            interval: Interval
     ) -> int:
         """"""
         count: int = self.database.delete_bar_data(
@@ -181,12 +185,12 @@ class ManagerEngine(BaseEngine):
         return count
 
     def download_bar_data(
-        self,
-        symbol: str,
-        exchange: Exchange,
-        interval: str,
-        start: datetime,
-        output: Callable
+            self,
+            symbol: str,
+            exchange: Exchange,
+            interval: str,
+            start: datetime,
+            output: Callable
     ) -> int:
         """
         Query bar data from datafeed.
@@ -218,11 +222,11 @@ class ManagerEngine(BaseEngine):
         return 0
 
     def download_tick_data(
-        self,
-        symbol: str,
-        exchange: Exchange,
-        start: datetime,
-        output: Callable
+            self,
+            symbol: str,
+            exchange: Exchange,
+            start: datetime,
+            output: Callable
     ) -> int:
         """
         Query tick data from datafeed.

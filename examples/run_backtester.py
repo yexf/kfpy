@@ -5,6 +5,7 @@ from src.trader.ui import MainWindow, create_qapp
 from src.gateway.xt import XtGateway
 from src.app.datamanager import DataManagerApp
 from src.app.cta_backtester import CtaBacktesterApp
+from src.app.vp_backtester import VPBacktesterApp
 
 
 def main():
@@ -15,6 +16,7 @@ def main():
     main_engine = MainEngine(event_engine)
     main_engine.add_gateway(XtGateway)
     main_engine.add_app(CtaBacktesterApp)
+    main_engine.add_app(VPBacktesterApp)
     main_engine.add_app(DataManagerApp)
 
     main_window = MainWindow(main_engine, event_engine)

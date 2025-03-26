@@ -2,11 +2,13 @@ from typing import List, Tuple, Dict
 from functools import partial
 from datetime import datetime, timedelta
 
+from PySide6.QtWidgets import QHeaderView
+
 from src.trader.ui import QtWidgets, QtCore
 from src.trader.engine import MainEngine, EventEngine
 from src.trader.constant import Interval, Exchange
 from src.trader.object import BarData
-from src.trader.database import DB_TZ
+from src.trader.database import DB_TZ, TickOverview
 from src.trader.utility import available_timezones
 
 from ..engine import APP_NAME, ManagerEngine, BarOverview
@@ -16,6 +18,7 @@ INTERVAL_NAME_MAP = {
     Interval.MINUTE: "分钟线",
     Interval.HOUR: "小时线",
     Interval.DAILY: "日线",
+    Interval.TICK: "Tick",
 }
 
 
@@ -78,12 +81,14 @@ class ManagerWidget(QtWidgets.QWidget):
             "结束时间",
             "",
             "",
+            "",
             ""
         ]
 
         self.tree: QtWidgets.QTreeWidget = QtWidgets.QTreeWidget()
         self.tree.setColumnCount(len(labels))
         self.tree.setHeaderLabels(labels)
+        self.tree.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
     def init_table(self) -> None:
         """"""

@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Dict
 
 from src.trader.constant import Direction, Offset, Interval
-from .locale import _
+from src.util.utility import locate as _
 
 APP_NAME = "CtaStrategy"
 STOPORDER_PREFIX = "STOP"

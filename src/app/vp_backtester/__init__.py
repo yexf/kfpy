@@ -28,19 +28,19 @@ from src.trader.app import BaseApp
 from .engine import BacktesterEngine, APP_NAME
 
 try:
-    __version__ = importlib_metadata.version("vnpy_ctabacktester")
+    __version__ = importlib_metadata.version("vnpy_vpbacktester")
 except importlib_metadata.PackageNotFoundError:
     __version__ = "dev"
 
 
-class CtaBacktesterApp(BaseApp):
+class VPBacktesterApp(BaseApp):
     """"""
-    from src.util.utility import locate as _
+    from .locale import _
 
     app_name: str = APP_NAME
     app_module: str = __name__
     app_path: Path = Path(__file__).parent
-    display_name: str = _("CTA回测")
+    display_name: str = _("VP回测")
     engine_class: BacktesterEngine = BacktesterEngine
     widget_name: str = "BacktesterManager"
     icon_name: str = str(app_path.joinpath("ui", "backtester.ico"))

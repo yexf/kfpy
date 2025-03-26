@@ -19,7 +19,7 @@ from src.trader.object import BarData, TradeData, OrderData
 from src.trader.database import DB_TZ
 from src.app.cta_strategy.backtesting import DailyResult
 
-from src.util.utility import locate as _
+from ..locale import _
 from ..engine import (
     APP_NAME,
     EVENT_BACKTESTER_LOG,
@@ -638,7 +638,7 @@ class BacktestingSettingEditor(QtWidgets.QDialog):
     """
 
     def __init__(
-            self, class_name: str, parameters: dict
+        self, class_name: str, parameters: dict
     ) -> None:
         """"""
         super(BacktestingSettingEditor, self).__init__()
@@ -847,7 +847,7 @@ class OptimizationSettingEditor(QtWidgets.QDialog):
     }
 
     def __init__(
-            self, class_name: str, parameters: dict
+        self, class_name: str, parameters: dict
     ) -> None:
         """"""
         super().__init__()
@@ -982,7 +982,7 @@ class OptimizationResultMonitor(QtWidgets.QDialog):
     """
 
     def __init__(
-            self, result_values: list, target_display: str
+        self, result_values: list, target_display: str
     ) -> None:
         """"""
         super().__init__()
@@ -1134,11 +1134,11 @@ class BacktestingResultDialog(QtWidgets.QDialog):
     """"""
 
     def __init__(
-            self,
-            main_engine: MainEngine,
-            event_engine: EventEngine,
-            title: str,
-            table_class: QtWidgets.QTableWidget
+        self,
+        main_engine: MainEngine,
+        event_engine: EventEngine,
+        title: str,
+        table_class: QtWidgets.QTableWidget
     ) -> None:
         """"""
         super().__init__()

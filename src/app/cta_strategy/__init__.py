@@ -36,10 +36,9 @@ try:
 except importlib_metadata.PackageNotFoundError:
     __version__ = "dev"
 
-
 class CtaStrategyApp(BaseApp):
     """"""
-    from .locale import _
+    from src.util.utility import locate as _
 
     app_name: str = APP_NAME
     app_module: str = __module__
