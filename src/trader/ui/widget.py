@@ -34,7 +34,7 @@ from ..object import (
     QuoteData,
     TickData
 )
-from ...util.utility import load_json, save_json, get_digits, ZoneInfo
+from ...trader.utility import load_json, save_json, get_digits, ZoneInfo
 from ..setting import SETTING_FILENAME, SETTINGS
 from ..locale import _
 

@@ -42,7 +42,7 @@ from .object import (
     Exchange
 )
 from .setting import SETTINGS
-from src.util.utility import get_folder_path, TRADER_DIR
+from .utility import get_folder_path, TRADER_DIR
 from .converter import OffsetConverter
 from .locale import _
 

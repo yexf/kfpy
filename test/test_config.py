@@ -1,4 +1,4 @@
-from src.util.utility import *
+from src.trader.utility import *
 
 test_config_path = "test_qmt_account.json"
 config_path = "qmt_account.json"

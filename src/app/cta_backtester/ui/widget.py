@@ -8,15 +8,15 @@ import numpy as np
 import pyqtgraph as pg
 from pandas import DataFrame
 
-from vnpy.trader.constant import Interval, Direction, Exchange
-from vnpy.trader.engine import MainEngine, BaseEngine
-from vnpy.trader.ui import QtCore, QtWidgets, QtGui
-from vnpy.trader.ui.widget import BaseMonitor, BaseCell, DirectionCell, EnumCell
-from vnpy.event import Event, EventEngine
-from vnpy.chart import ChartWidget, CandleItem, VolumeItem
-from vnpy.trader.utility import load_json, save_json
-from vnpy.trader.object import BarData, TradeData, OrderData
-from vnpy.trader.database import DB_TZ
+from src.trader.constant import Interval, Direction, Exchange
+from src.trader.engine import MainEngine, BaseEngine
+from src.trader.ui import QtCore, QtWidgets, QtGui
+from src.trader.ui.widget import BaseMonitor, BaseCell, DirectionCell, EnumCell
+from src.event import Event, EventEngine
+from src.chart import ChartWidget, CandleItem, VolumeItem
+from src.trader.utility import load_json, save_json
+from src.trader.object import BarData, TradeData, OrderData
+from src.trader.database import DB_TZ
 from src.app.cta_strategy.backtesting import DailyResult
 
 from ..locale import _

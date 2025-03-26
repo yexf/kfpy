@@ -1,6 +1,6 @@
 from src.util.data_tool.eastmoney_bond import get_eastmoney_bond, get_eastmoney_bond_all, reload_columns_all, \
     reload_columns
-from src.util.utility import is_need_update, update_data, get_data
+from src.util.utility import is_need_update, update_data
 
 if __name__ == '__main__':
     if is_need_update("conv_bond.json"):

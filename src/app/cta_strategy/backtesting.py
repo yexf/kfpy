@@ -19,7 +19,7 @@ from src.trader.constant import (
 )
 from src.trader.database import get_database, BaseDatabase
 from src.trader.object import OrderData, TradeData, BarData, TickData
-from src.util.utility import round_to, extract_vt_symbol
+from src.trader.utility import round_to, extract_vt_symbol
 from src.trader.optimize import (
     OptimizationSetting,
     check_optimization_setting,

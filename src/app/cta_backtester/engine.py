@@ -13,7 +13,7 @@ from typing import Optional
 from src.event import Event, EventEngine
 from src.trader.engine import BaseEngine, MainEngine
 from src.trader.constant import Interval
-from src.util.utility import extract_vt_symbol
+from src.trader.utility import extract_vt_symbol
 from src.trader.object import HistoryRequest, TickData, ContractData, BarData
 from src.trader.datafeed import BaseDatafeed, get_datafeed
 from src.trader.database import BaseDatabase, get_database

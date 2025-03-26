@@ -11,7 +11,7 @@ from src.trader.object import TickData
 from src.util import timer
 from src.util.data_tool.eastmoney_bond import get_bond_info
 from src.util.timer import get_datatime
-from src.util.utility import load_json, save_json
+from src.trader.utility import load_json, save_json
 
 pbar = None
 last_finished = 0
