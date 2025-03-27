@@ -4,7 +4,6 @@ from src.trader.ui import MainWindow, create_qapp
 
 from src.gateway.xt import XtGateway
 from src.app.datamanager import DataManagerApp
-from src.app.cta_backtester import CtaBacktesterApp
 from src.app.vp_backtester import VPBacktesterApp
 
 

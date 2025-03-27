@@ -73,6 +73,9 @@ def build_download_plan(start_time: str = '20250101'):
     format_str = "%Y-%m-%d %H:%M:%S"
     download_plan = {}
     for bi in conv_bond_info:
+        exchange = bi["交易市场"]
+        if exchange != "CNSESZ" and exchange != "CNSESH":
+            continue
         code = bi["交易代码"]
         dedate = bi["退市日期"]
         indate = bi["上市日期"]
