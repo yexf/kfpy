@@ -7,6 +7,7 @@ from src.trader.constant import (
 )
 
 from .base import (
+    APP_NAME,
     EngineType,
     StopOrderStatus
 )
@@ -25,7 +26,7 @@ STOP_STATUS_MAP = {
 }
 
 
-class VolPriceEngine(BaseEngine):
+class DVPEngine(BaseEngine):
     """"""
 
     engine_type = EngineType.LIVE  # live trading engine
@@ -34,12 +35,11 @@ class VolPriceEngine(BaseEngine):
     data_filename = "cta_strategy_data.json"
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
-        super(VolPriceEngine, self).__init__(
-            main_engine, event_engine, "SmartMoneyStrategy")
+        super(DVPEngine, self).__init__(
+            main_engine, event_engine, "DVPStrategy")
 
     def init_engine(self):
         pass
 
     def close(self) -> None:
         pass
-

@@ -4,19 +4,19 @@ from src.trader.app import BaseApp
 
 from .base import APP_NAME, StopOrder
 
-from .engine import VolPriceEngine
+from .engine import DVPEngine
 
 
 # from .template import CtaTemplate, CtaSignal, TargetPosTemplate
 #
 
-class VolPriceStrategyApp(BaseApp):
+class DVPStrategyApp(BaseApp):
     """"""
 
     app_name = APP_NAME
     app_module = __name__
     app_path = Path(__file__).parent
-    display_name = "量价策略"
-    engine_class = VolPriceEngine
-    widget_name = "VolPriceManager"
-    icon_name = "SM.ico"
+    display_name = "日内量价策略"
+    engine_class = DVPEngine
+    widget_name = "DVPManager"
+    icon_name = str(app_path.joinpath("ui", "dvp.ico"))

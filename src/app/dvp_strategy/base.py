@@ -7,7 +7,7 @@ from enum import Enum
 
 from src.trader.constant import Direction, Offset
 
-APP_NAME = "SmartMoneyStrategy"
+APP_NAME = "DVPStrategy"
 STOPORDER_PREFIX = "STOP"
 
 
@@ -41,6 +41,6 @@ class StopOrder:
     status: StopOrderStatus = StopOrderStatus.WAITING
 
 
-EVENT_SM_LOG = "eSmartMoneyLog"
-EVENT_SM_STRATEGY = "eSmartMoneyStrategy"
-EVENT_SM_STOPORDER = "eSmartMoneyStopOrder"
+EVENT_DVP_LOG = "eSmartMoneyLog"
+EVENT_DVP_STRATEGY = "eSmartMoneyStrategy"
+EVENT_DVP_STOPORDER = "eSmartMoneyStopOrder"

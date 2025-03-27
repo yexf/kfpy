@@ -33,14 +33,14 @@ except importlib_metadata.PackageNotFoundError:
     __version__ = "dev"
 
 
-class VPBacktesterApp(BaseApp):
+class DVPBacktesterApp(BaseApp):
     """"""
     from src.util.utility import locate as _
 
     app_name: str = APP_NAME
     app_module: str = __name__
     app_path: Path = Path(__file__).parent
-    display_name: str = _("VP回测")
+    display_name: str = _("日内量价策略回测")
     engine_class: BacktesterEngine = BacktesterEngine
     widget_name: str = "BacktesterManager"
     icon_name: str = str(app_path.joinpath("ui", "backtester.ico"))

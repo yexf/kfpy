@@ -42,7 +42,7 @@ from .object import (
     Exchange
 )
 from .setting import SETTINGS
-from .utility import get_folder_path, TRADER_DIR
+from .utility import get_folder_path, TRADER_DIR, load_json
 from .converter import OffsetConverter
 from .locale import _
 
@@ -93,6 +93,12 @@ class MainEngine:
                 self.exchanges.append(exchange)
 
         return gateway
+
+    def connect_gateway(self, gateway_class: Type[BaseGateway]) -> None:
+        gateway_name = gateway_class.default_name
+        filename: str = f"connect_{gateway_name.lower()}.json"
+        setting: dict = load_json(filename)
+        self.connect(setting, gateway_name)
 
     def add_app(self, app_class: Type[BaseApp]) -> "BaseEngine":
         """

@@ -43,7 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
 
-        self.window_title: str = _("KunFU Trader - {}   [{}]").format(src.__version__, TRADER_DIR)
+        self.window_title: str = _("坤复投资 - {}   [{}]").format(src.__version__, TRADER_DIR)
 
         self.widgets: Dict[str, QtWidgets.QWidget] = {}
         self.monitors: Dict[str, BaseMonitor] = {}
@@ -166,7 +166,6 @@ class MainWindow(QtWidgets.QMainWindow):
             _("社区论坛"),
             get_icon_path(__file__, "forum.ico"),
             self.open_forum,
-            True
         )
 
         self.add_action(
@@ -174,6 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
             _("关于"),
             get_icon_path(__file__, "about.ico"),
             partial(self.open_widget, AboutDialog, "about"),
+            True
         )
 
     def init_toolbar(self) -> None:

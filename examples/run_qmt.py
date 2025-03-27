@@ -10,8 +10,8 @@ from src.trader.setting import SETTINGS
 from src.trader.engine import MainEngine, LogEngine, BaseEngine
 
 from src.gateway.qmt import QmtGateway
-from src.app.vp_strategy import VolPriceStrategyApp, VolPriceEngine
-from src.app.vp_strategy.base import EVENT_SM_LOG
+from src.app.dvp_strategy import DVPStrategyApp, DVPEngine
+from src.app.dvp_strategy.base import EVENT_SM_LOG
 
 SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
@@ -45,7 +45,7 @@ def run_child():
     event_engine = EventEngine()
     main_engine = MainEngine(event_engine)
     main_engine.add_gateway(QmtGateway)
-    sm_engine: Union[VolPriceEngine, BaseEngine] = main_engine.add_app(VolPriceStrategyApp)
+    sm_engine: Union[DVPEngine, BaseEngine] = main_engine.add_app(DVPStrategyApp)
     main_engine.write_log("主引擎创建成功")
 
     log_engine: Union[LogEngine, BaseEngine] = main_engine.get_engine("log")

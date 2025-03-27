@@ -12,15 +12,15 @@ from src.trader.ui.widget import (
 )
 from ..base import (
     APP_NAME,
-    EVENT_CTA_LOG,
-    EVENT_CTA_STOPORDER,
-    EVENT_CTA_STRATEGY
+    EVENT_DVP_LOG,
+    EVENT_DVP_STOPORDER,
+    EVENT_DVP_STRATEGY
 )
-from ..engine import CtaEngine
-from .rollover import RolloverTool
+from ..engine import DVPEngine
+from src.util.utility import locate as _
 
 
-class CtaManager(QtWidgets.QWidget):
+class DVPManager(QtWidgets.QWidget):
     """"""
 
     signal_log: QtCore.Signal = QtCore.Signal(Event)
@@ -32,7 +32,7 @@ class CtaManager(QtWidgets.QWidget):
 
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
-        self.cta_engine: CtaEngine = main_engine.get_engine(APP_NAME)
+        self.cta_engine: DVPEngine = main_engine.get_engine(APP_NAME)
 
         self.managers: Dict[str, StrategyManager] = {}
 
@@ -43,7 +43,7 @@ class CtaManager(QtWidgets.QWidget):
 
     def init_ui(self) -> None:
         """"""
-        self.setWindowTitle(_("CTA策略"))
+        self.setWindowTitle(_("DVP策略"))
 
         # Create widgets
         self.class_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()
@@ -63,8 +63,8 @@ class CtaManager(QtWidgets.QWidget):
         clear_button: QtWidgets.QPushButton = QtWidgets.QPushButton(_("清空日志"))
         clear_button.clicked.connect(self.clear_log)
 
-        roll_button: QtWidgets.QPushButton = QtWidgets.QPushButton("移仓助手")
-        roll_button.clicked.connect(self.roll)
+        # roll_button: QtWidgets.QPushButton = QtWidgets.QPushButton("移仓助手")
+        # roll_button.clicked.connect(self.roll)
 
         self.scroll_layout: QtWidgets.QVBoxLayout = QtWidgets.QVBoxLayout()
         self.scroll_layout.addStretch()
@@ -99,7 +99,7 @@ class CtaManager(QtWidgets.QWidget):
         hbox1.addWidget(start_button)
         hbox1.addWidget(stop_button)
         hbox1.addWidget(clear_button)
-        hbox1.addWidget(roll_button)
+        # hbox1.addWidget(roll_button)
 
         grid: QtWidgets.QGridLayout = QtWidgets.QGridLayout()
         grid.addWidget(self.scroll_area, 0, 0, 2, 1)
@@ -131,7 +131,7 @@ class CtaManager(QtWidgets.QWidget):
         self.signal_strategy.connect(self.process_strategy_event)
 
         self.event_engine.register(
-            EVENT_CTA_STRATEGY, self.signal_strategy.emit
+            EVENT_DVP_STRATEGY, self.signal_strategy.emit
         )
 
     def process_strategy_event(self, event) -> None:
@@ -192,10 +192,10 @@ class CtaManager(QtWidgets.QWidget):
         """"""
         self.showMaximized()
 
-    def roll(self) -> None:
-        """"""
-        dialog: RolloverTool = RolloverTool(self)
-        dialog.exec_()
+    # def roll(self) -> None:
+    #     """"""
+    #     dialog: RolloverTool = RolloverTool(self)
+    #     dialog.exec_()
 
 
 class StrategyManager(QtWidgets.QFrame):
@@ -204,13 +204,13 @@ class StrategyManager(QtWidgets.QFrame):
     """
 
     def __init__(
-        self, cta_manager: CtaManager, cta_engine: CtaEngine, data: dict
+            self, cta_manager: DVPManager, cta_engine: DVPEngine, data: dict
     ) -> None:
         """"""
         super(StrategyManager, self).__init__()
 
-        self.cta_manager: CtaManager = cta_manager
-        self.cta_engine: CtaEngine = cta_engine
+        self.cta_manager: DVPManager = cta_manager
+        self.cta_engine: DVPEngine = cta_engine
 
         self.strategy_name: str = data["strategy_name"]
         self._data: dict = data
@@ -376,7 +376,7 @@ class StopOrderMonitor(BaseMonitor):
     Monitor for local stop order.
     """
 
-    event_type: str = EVENT_CTA_STOPORDER
+    event_type: str = EVENT_DVP_STOPORDER
     data_key: str = "stop_orderid"
     sorting: bool = True
 
@@ -409,7 +409,7 @@ class LogMonitor(BaseMonitor):
     Monitor for log data.
     """
 
-    event_type: str = EVENT_CTA_LOG
+    event_type: str = EVENT_DVP_LOG
     data_key: str = ""
     sorting: bool = False
 
@@ -442,7 +442,7 @@ class SettingEditor(QtWidgets.QDialog):
     """
 
     def __init__(
-        self, parameters: dict, strategy_name: str = "", class_name: str = ""
+            self, parameters: dict, strategy_name: str = "", class_name: str = ""
     ) -> None:
         """"""
         super(SettingEditor, self).__init__()

@@ -32,7 +32,7 @@ from ..engine import (
 class BacktesterManager(QtWidgets.QWidget):
     """"""
 
-    setting_filename: str = "vp_backtester_setting.json"
+    setting_filename: str = "dvp_backtester_setting.json"
 
     signal_log: QtCore.Signal = QtCore.Signal(Event)
     signal_backtesting_finished: QtCore.Signal = QtCore.Signal(Event)
@@ -70,7 +70,7 @@ class BacktesterManager(QtWidgets.QWidget):
 
     def init_ui(self) -> None:
         """"""
-        self.setWindowTitle(_("量价策略回测"))
+        self.setWindowTitle(_("日内量价策略回测"))
 
         # Setting Part
         self.class_combo: QtWidgets.QComboBox = QtWidgets.QComboBox()

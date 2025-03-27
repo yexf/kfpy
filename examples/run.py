@@ -4,7 +4,8 @@ from src.trader.ui import MainWindow, create_qapp
 
 from src.gateway.xt import XtGateway
 from src.app.datamanager import DataManagerApp
-from src.app.vp_backtester import VPBacktesterApp
+from src.app.dvp_backtester import DVPBacktesterApp
+from src.app.dvp_strategy import DVPStrategyApp
 
 
 def main():
@@ -14,7 +15,8 @@ def main():
     event_engine = EventEngine()
     main_engine = MainEngine(event_engine)
     main_engine.add_gateway(XtGateway)
-    main_engine.add_app(VPBacktesterApp)
+    main_engine.add_app(DVPStrategyApp)
+    main_engine.add_app(DVPBacktesterApp)
     main_engine.add_app(DataManagerApp)
 
     main_window = MainWindow(main_engine, event_engine)
