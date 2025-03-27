@@ -3,9 +3,11 @@ Defines constants and objects used in CtaStrategy App.
 """
 
 from dataclasses import dataclass, field
+from datetime import timedelta
 from enum import Enum
+from typing import Dict
 
-from src.trader.constant import Direction, Offset
+from src.trader.constant import Direction, Offset, Interval
 
 APP_NAME = "DVPStrategy"
 STOPORDER_PREFIX = "STOP"
@@ -41,6 +43,13 @@ class StopOrder:
     status: StopOrderStatus = StopOrderStatus.WAITING
 
 
-EVENT_DVP_LOG = "eSmartMoneyLog"
-EVENT_DVP_STRATEGY = "eSmartMoneyStrategy"
-EVENT_DVP_STOPORDER = "eSmartMoneyStopOrder"
+EVENT_DVP_LOG = "eDVPLog"
+EVENT_DVP_STRATEGY = "eDVPStrategy"
+EVENT_DVP_STOPORDER = "eDVPStopOrder"
+
+INTERVAL_DELTA_MAP: Dict[Interval, timedelta] = {
+    Interval.TICK: timedelta(milliseconds=1),
+    Interval.MINUTE: timedelta(minutes=1),
+    Interval.HOUR: timedelta(hours=1),
+    Interval.DAILY: timedelta(days=1),
+}

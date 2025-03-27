@@ -10,6 +10,7 @@ from types import ModuleType
 from pandas import DataFrame
 from typing import Optional
 
+from src.app.dvp_strategy import DVPTemplate
 from src.event import Event, EventEngine
 from src.trader.engine import BaseEngine, MainEngine
 from src.trader.constant import Interval
@@ -18,16 +19,15 @@ from src.trader.object import HistoryRequest, TickData, ContractData, BarData
 from src.trader.datafeed import BaseDatafeed, get_datafeed
 from src.trader.database import BaseDatabase, get_database
 
-import src.app.cta_strategy
-from src.app.cta_strategy import CtaTemplate, TargetPosTemplate
-from src.app.cta_strategy.backtesting import (
+import src.app.dvp_strategy
+from src.app.dvp_strategy.backtesting import (
     BacktestingEngine,
     OptimizationSetting,
     BacktestingMode
 )
 from src.util.utility import locate as _
 
-APP_NAME = "CtaBacktester"
+APP_NAME = "DVPBacktester"
 
 EVENT_BACKTESTER_LOG = "eBacktesterLog"
 EVENT_BACKTESTER_BACKTESTING_FINISHED = "eBacktesterBacktestingFinished"
@@ -36,7 +36,7 @@ EVENT_BACKTESTER_OPTIMIZATION_FINISHED = "eBacktesterOptimizationFinished"
 
 class BacktesterEngine(BaseEngine):
     """
-    For running CTA strategy backtesting.
+    For running DVP strategy backtesting.
     """
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
@@ -59,7 +59,7 @@ class BacktesterEngine(BaseEngine):
 
     def init_engine(self) -> None:
         """"""
-        self.write_log(_("初始化CTA回测引擎"))
+        self.write_log(_("初始化DVP回测引擎"))
 
         self.backtesting_engine = BacktestingEngine()
         # Redirect log from backtesting engine outside.
@@ -88,9 +88,9 @@ class BacktesterEngine(BaseEngine):
         """
         Load strategy class from source code.
         """
-        app_path: Path = Path(src.app.cta_strategy.__file__).parent
+        app_path: Path = Path(src.app.dvp_strategy.__file__).parent
         path1: Path = app_path.joinpath("strategies")
-        self.load_strategy_class_from_folder(path1, "src_ctastrategy.strategies")
+        self.load_strategy_class_from_folder(path1, "src.app.dvp_strategy.strategies")
 
         path2: Path = Path.cwd().joinpath("strategies")
         self.load_strategy_class_from_folder(path2, "strategies")
@@ -120,8 +120,8 @@ class BacktesterEngine(BaseEngine):
                 value = getattr(module, name)
                 if (
                     isinstance(value, type)
-                    and issubclass(value, CtaTemplate)
-                    and value not in {CtaTemplate, TargetPosTemplate}
+                    and issubclass(value, DVPTemplate)
+                    and value not in {DVPTemplate}
                 ):
                     self.classes[value.__name__] = value
         except:  # noqa

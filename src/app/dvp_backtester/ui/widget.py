@@ -25,7 +25,7 @@ from ..engine import (
     EVENT_BACKTESTER_LOG,
     EVENT_BACKTESTER_BACKTESTING_FINISHED,
     EVENT_BACKTESTER_OPTIMIZATION_FINISHED,
-    OptimizationSetting
+    OptimizationSetting, BacktesterEngine
 )
 
 
@@ -45,7 +45,7 @@ class BacktesterManager(QtWidgets.QWidget):
         self.main_engine: MainEngine = main_engine
         self.event_engine: EventEngine = event_engine
 
-        self.backtester_engine: BaseEngine = main_engine.get_engine(APP_NAME)
+        self.backtester_engine: BacktesterEngine = main_engine.get_engine(APP_NAME)
         self.class_names: list = []
         self.settings: dict = {}
 
