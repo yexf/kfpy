@@ -12,6 +12,7 @@ from typing import Optional
 
 from src.app.dvp_strategy import DVPTemplate
 from src.event import Event, EventEngine
+from src.gateway.qmt.utils import to_vn_contract, get_live_bond_info
 from src.trader.engine import BaseEngine, MainEngine
 from src.trader.constant import Interval
 from src.trader.utility import extract_vt_symbol
@@ -26,7 +27,7 @@ from src.app.dvp_strategy.backtesting import (
     BacktestingMode
 )
 from src.util.data_tool.eastmoney_bond import get_bond_info
-from src.util.utility import locate as _, get_live_bond_info
+from src.util.utility import locate as _
 
 APP_NAME = "DVPBacktester"
 
@@ -382,18 +383,67 @@ class BacktesterEngine(BaseEngine):
             self.database.save_bar_data(bar_data, True)
 
     def query_sector_data(self, req: SectorHistoryRequest) -> SectorData:
-        bis = get_live_bond_info(req.tick_date, conv_bond_info)
+        bond_infos, stock_infos = get_live_bond_info(req.date, conv_bond_info)
+        contract_list = bond_infos + stock_infos
         sd: SectorData = SectorData(sector=req.sector,
                                     gateway_name="XT",
-                                    contract_list=bis,
-                                    tick_datetime=req.tick_date,
-                                    daily_start=req.daily_start,
-                                    daily_end=req.daily_end,
+                                    contract_list=contract_list,
+                                    date=req.date,
                                     tick_data={},
                                     daily_data={})
         tick_overview: list[TickOverview] = self.database.get_tick_overview()
         bar_overview: list[BarOverview] = self.database.get_bar_overview()
+        tick_overview_dict: dict[str, TickOverview] = {}
+        bar_overview_dict: dict[str, bar_overview] = {}
+        for tick in tick_overview:
+            vt_symbol: str = f"{tick.symbol}.{tick.exchange.value}"
+            tick_overview_dict[vt_symbol] = tick
+        for bar in bar_overview:
+            vt_symbol: str = f"{bar.symbol}.{bar.exchange.value}"
+            bar_overview_dict[vt_symbol] = bar
+        for code in contract_list:
+            vt_symbol: str = code.vt_symbol
+            tick_req: HistoryRequest = HistoryRequest(
+                symbol=code.symbol,
+                exchange=code.exchange,
+                start=req.date + timedelta(hours=9, minutes=30),
+                end=req.date + timedelta(hours=15),
+                interval=Interval.TICK
+            )
+            daily_req: HistoryRequest = HistoryRequest(
+                symbol=code.symbol,
+                exchange=code.exchange,
+                start=req.date - timedelta(days=30),
+                end=req.date,
+                interval=Interval.DAILY
+            )
+            if vt_symbol not in tick_overview_dict:
+                download_flag = True
+            else:
+                tick_ov: TickOverview = tick_overview_dict[vt_symbol]
+                if tick_req.start < tick_ov.start or tick_req.end > tick_ov.end:
+                    download_flag = True
+                else:
+                    download_flag = False
+            if download_flag:
+                self.write_log(_("Tick-{}历史数据开始下载").format(vt_symbol))
+                tick_data = self.datafeed.query_tick_history(tick_req, self.write_log)
+                if len(tick_data) > 0:
+                    sd.tick_data[vt_symbol] = tick_data
 
+            if vt_symbol not in bar_overview_dict:
+                download_flag = True
+            else:
+                bar_ov: BarOverview = bar_overview_dict[vt_symbol]
+                if daily_req.end <= bar_ov.end:
+                    download_flag = False
+                else:
+                    download_flag = True
+            if download_flag:
+                self.write_log(_("Daily-{}历史数据开始下载").format(vt_symbol))
+                bar_data = self.datafeed.query_bar_history(daily_req, self.write_log)
+                if len(bar_data) > 0:
+                    sd.daily_data[vt_symbol] = bar_data
         return sd
 
     def run_downloading(
@@ -408,9 +458,7 @@ class BacktesterEngine(BaseEngine):
 
         req: SectorHistoryRequest = SectorHistoryRequest(
             sector=section,
-            tick_date=backtester_date,
-            daily_start=backtester_date - timedelta(days=30),
-            daily_end=backtester_date
+            date=backtester_date
         )
 
         try:

@@ -8,7 +8,7 @@ from collections import namedtuple
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Union, List
+from typing import Union
 
 from xtquant import xtdata
 
@@ -134,21 +134,3 @@ def contract_to_dict(contract: ContractData) -> dict:
     return contract_dict
 
 
-def get_live_bond_info(dt, conv_bond_info) -> List[str]:
-    bond_infos = []
-    format_str = "%Y-%m-%d %H:%M:%S"
-    for bi in conv_bond_info:
-        code = bi["交易代码"]
-        stock_code = bi['正股代码'] + code[6:]
-        dedate = bi["退市日期"]
-        indate = bi["上市日期"]
-        if dedate is not None:
-            dedate = datetime.strptime(dedate, format_str)
-        if indate is None:
-            continue
-        indate = datetime.strptime(indate, format_str)
-        if indate < dt:
-            if dedate is None or dedate > dt:
-                bond_infos.append(code)
-                bond_infos.append(stock_code)
-    return bond_infos
