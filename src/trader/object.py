@@ -109,8 +109,12 @@ class BarData(BaseData):
 @dataclass
 class SectorData(BaseData):
     sector: str
+    contract_list: List[str]
+    tick_datetime: datetime
+    daily_start: datetime
+    daily_end: datetime
     tick_data: Dict[str, List[TickData]]
-    daily_bar_data: Dict[str, List[BarData]]
+    daily_data: Dict[str, List[BarData]]
 
 @dataclass
 class OrderData(BaseData):
@@ -401,7 +405,7 @@ class SectorHistoryRequest:
     Request sending to specific gateway for querying history data.
     """
 
-    section: str
+    sector: str
     tick_date: datetime
     daily_start: datetime = None
     daily_end: datetime = None

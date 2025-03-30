@@ -31,12 +31,6 @@ class BaseDatafeed(ABC):
         """
         output(_("查询Tick数据失败：没有正确配置数据服务"))
 
-    def query_section_history(self, req: SectorHistoryRequest, output: Callable = print) -> Optional[SectorData]:
-        """
-        Query history tick data.
-        """
-        output(_("查询Sector数据失败：没有正确配置数据服务"))
-
 
 datafeed: BaseDatafeed = None
 

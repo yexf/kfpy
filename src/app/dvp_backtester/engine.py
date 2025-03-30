@@ -17,7 +17,7 @@ from src.trader.constant import Interval
 from src.trader.utility import extract_vt_symbol
 from src.trader.object import HistoryRequest, TickData, ContractData, BarData, SectorHistoryRequest, SectorData
 from src.trader.datafeed import BaseDatafeed, get_datafeed
-from src.trader.database import BaseDatabase, get_database
+from src.trader.database import BaseDatabase, get_database, TickOverview, BarOverview
 
 import src.app.dvp_strategy
 from src.app.dvp_strategy.backtesting import (
@@ -25,7 +25,8 @@ from src.app.dvp_strategy.backtesting import (
     OptimizationSetting,
     BacktestingMode
 )
-from src.util.utility import locate as _
+from src.util.data_tool.eastmoney_bond import get_bond_info
+from src.util.utility import locate as _, get_live_bond_info
 
 APP_NAME = "DVPBacktester"
 
@@ -33,7 +34,7 @@ EVENT_BACKTESTER_LOG = "eBacktesterLog"
 EVENT_BACKTESTER_BACKTESTING_FINISHED = "eBacktesterBacktestingFinished"
 EVENT_BACKTESTER_OPTIMIZATION_FINISHED = "eBacktesterOptimizationFinished"
 
-
+conv_bond_info = get_bond_info("conv_bond_all.json")
 class BacktesterEngine(BaseEngine):
     """
     For running DVP strategy backtesting.
@@ -371,6 +372,30 @@ class BacktesterEngine(BaseEngine):
 
         return True
 
+    def save_sector_data(self, sector_data: SectorData) -> None:
+        for code in sector_data.tick_data:
+            tick_data = sector_data.tick_data[code]
+            self.database.save_tick_data(tick_data, True)
+
+        for code in sector_data.daily_data:
+            bar_data = sector_data.daily_data[code]
+            self.database.save_bar_data(bar_data, True)
+
+    def query_sector_data(self, req: SectorHistoryRequest) -> SectorData:
+        bis = get_live_bond_info(req.tick_date, conv_bond_info)
+        sd: SectorData = SectorData(sector=req.sector,
+                                    gateway_name="XT",
+                                    contract_list=bis,
+                                    tick_datetime=req.tick_date,
+                                    daily_start=req.daily_start,
+                                    daily_end=req.daily_end,
+                                    tick_data={},
+                                    daily_data={})
+        tick_overview: list[TickOverview] = self.database.get_tick_overview()
+        bar_overview: list[BarOverview] = self.database.get_bar_overview()
+
+        return sd
+
     def run_downloading(
             self,
             section: str,
@@ -382,16 +407,16 @@ class BacktesterEngine(BaseEngine):
         self.write_log(_("{}-{}开始下载历史数据").format(section, backtester_date))
 
         req: SectorHistoryRequest = SectorHistoryRequest(
-            section=section,
+            sector=section,
             tick_date=backtester_date,
             daily_start=backtester_date - timedelta(days=30),
             daily_end=backtester_date
         )
 
         try:
-            data: SectorData = self.datafeed.query_section_history(req, self.write_log)
+            data: SectorData = self.query_sector_data(req)
             if data:
-                self.database.save_bar_data(data)
+                self.save_sector_data(data)
                 self.write_log(_("{}-{}历史数据下载完成").format(section, backtester_date))
             else:
                 self.write_log(_("数据下载失败，无法获取{}的历史数据").format(section))

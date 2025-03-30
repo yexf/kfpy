@@ -201,7 +201,7 @@ def do_dumpdb(code, start_date, end_date):
                                   timer.to_tick_market_str(start_time), timer.to_tick_market_str(end_time))
     tick_list = conv_tick(data)
     print("保存tick数据到数据库", code, start_date, end_date)
-    database.save_tick_data(tick_list)
+    database.save_tick_data(tick_list, True)
 
 
 def do_dumpdb_plan(download_config_file: str) -> None:
