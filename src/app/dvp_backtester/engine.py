@@ -1,7 +1,7 @@
 from ast import List
 import importlib
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Thread
 from pathlib import Path
 from inspect import getfile
@@ -15,13 +15,13 @@ from src.event import Event, EventEngine
 from src.trader.engine import BaseEngine, MainEngine
 from src.trader.constant import Interval
 from src.trader.utility import extract_vt_symbol
-from src.trader.object import HistoryRequest, TickData, ContractData, BarData
+from src.trader.object import HistoryRequest, TickData, ContractData, BarData, SectorHistoryRequest, SectorData
 from src.trader.datafeed import BaseDatafeed, get_datafeed
 from src.trader.database import BaseDatabase, get_database
 
 import src.app.dvp_strategy
 from src.app.dvp_strategy.backtesting import (
-    BacktestingEngine,
+    DVPBacktestingEngine,
     OptimizationSetting,
     BacktestingMode
 )
@@ -44,7 +44,7 @@ class BacktesterEngine(BaseEngine):
         super().__init__(main_engine, event_engine, APP_NAME)
 
         self.classes: dict = {}
-        self.backtesting_engine: BacktestingEngine = None
+        self.backtesting_engine: DVPBacktestingEngine = None
         self.thread: Thread = None
 
         self.datafeed: BaseDatafeed = get_datafeed()
@@ -61,7 +61,7 @@ class BacktesterEngine(BaseEngine):
         """"""
         self.write_log(_("初始化DVP回测引擎"))
 
-        self.backtesting_engine = BacktestingEngine()
+        self.backtesting_engine = DVPBacktestingEngine()
         # Redirect log from backtesting engine outside.
         self.backtesting_engine.output = self.write_log
 
@@ -119,9 +119,9 @@ class BacktesterEngine(BaseEngine):
             for name in dir(module):
                 value = getattr(module, name)
                 if (
-                    isinstance(value, type)
-                    and issubclass(value, DVPTemplate)
-                    and value not in {DVPTemplate}
+                        isinstance(value, type)
+                        and issubclass(value, DVPTemplate)
+                        and value not in {DVPTemplate}
                 ):
                     self.classes[value.__name__] = value
         except:  # noqa
@@ -141,36 +141,29 @@ class BacktesterEngine(BaseEngine):
         return list(self.classes.keys())
 
     def run_backtesting(
-        self,
-        class_name: str,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime,
-        rate: float,
-        slippage: float,
-        size: int,
-        pricetick: float,
-        capital: int,
-        setting: dict
+            self,
+            class_name: str,
+            section: str,
+            choose_strategy: str,
+            backtester_date: datetime,
+            rate: float,
+            slippage: float,
+            size: int,
+            pricetick: float,
+            capital: int,
+            setting: dict
     ) -> None:
         """"""
         self.result_df = None
         self.result_statistics = None
 
-        engine: BacktestingEngine = self.backtesting_engine
+        engine: DVPBacktestingEngine = self.backtesting_engine
         engine.clear_data()
-
-        if interval == Interval.TICK.value:
-            mode: BacktestingMode = BacktestingMode.TICK
-        else:
-            mode: BacktestingMode = BacktestingMode.BAR
-
+        mode: BacktestingMode = BacktestingMode.TICK
         engine.set_parameters(
-            vt_symbol=vt_symbol,
-            interval=interval,
-            start=start,
-            end=end,
+            section=section,
+            choose_strategy=choose_strategy,
+            backtester_date=backtester_date,
             rate=rate,
             slippage=slippage,
             size=size,
@@ -211,18 +204,17 @@ class BacktesterEngine(BaseEngine):
         self.event_engine.put(event)
 
     def start_backtesting(
-        self,
-        class_name: str,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime,
-        rate: float,
-        slippage: float,
-        size: int,
-        pricetick: float,
-        capital: int,
-        setting: dict
+            self,
+            class_name: str,
+            section: str,
+            choose_strategy: str,
+            backtester_date: datetime,
+            rate: float,
+            slippage: float,
+            size: int,
+            pricetick: float,
+            capital: int,
+            setting: dict
     ) -> bool:
         if self.thread:
             self.write_log(_("已有任务在运行中，请等待完成"))
@@ -233,10 +225,9 @@ class BacktesterEngine(BaseEngine):
             target=self.run_backtesting,
             args=(
                 class_name,
-                vt_symbol,
-                interval,
-                start,
-                end,
+                section,
+                choose_strategy,
+                backtester_date,
                 rate,
                 slippage,
                 size,
@@ -267,25 +258,25 @@ class BacktesterEngine(BaseEngine):
         return strategy_class.get_class_parameters()
 
     def run_optimization(
-        self,
-        class_name: str,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime,
-        rate: float,
-        slippage: float,
-        size: int,
-        pricetick: float,
-        capital: int,
-        optimization_setting: OptimizationSetting,
-        use_ga: bool,
-        max_workers: int
+            self,
+            class_name: str,
+            vt_symbol: str,
+            interval: str,
+            start: datetime,
+            end: datetime,
+            rate: float,
+            slippage: float,
+            size: int,
+            pricetick: float,
+            capital: int,
+            optimization_setting: OptimizationSetting,
+            use_ga: bool,
+            max_workers: int
     ) -> None:
         """"""
         self.result_values = None
 
-        engine: BacktestingEngine = self.backtesting_engine
+        engine: DVPBacktestingEngine = self.backtesting_engine
         engine.clear_data()
 
         if interval == Interval.TICK.value:
@@ -338,20 +329,20 @@ class BacktesterEngine(BaseEngine):
         self.event_engine.put(event)
 
     def start_optimization(
-        self,
-        class_name: str,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime,
-        rate: float,
-        slippage: float,
-        size: int,
-        pricetick: float,
-        capital: int,
-        optimization_setting: OptimizationSetting,
-        use_ga: bool,
-        max_workers: int
+            self,
+            class_name: str,
+            vt_symbol: str,
+            interval: str,
+            start: datetime,
+            end: datetime,
+            rate: float,
+            slippage: float,
+            size: int,
+            pricetick: float,
+            capital: int,
+            optimization_setting: OptimizationSetting,
+            use_ga: bool,
+            max_workers: int
     ) -> bool:
         if self.thread:
             self.write_log(_("已有任务在运行中，请等待完成"))
@@ -381,56 +372,29 @@ class BacktesterEngine(BaseEngine):
         return True
 
     def run_downloading(
-        self,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime
+            self,
+            section: str,
+            backtester_date: datetime
     ) -> None:
         """
         执行下载任务
         """
-        self.write_log(_("{}-{}开始下载历史数据").format(vt_symbol, interval))
+        self.write_log(_("{}-{}开始下载历史数据").format(section, backtester_date))
 
-        try:
-            symbol, exchange = extract_vt_symbol(vt_symbol)
-        except ValueError:
-            self.write_log(_("{}解析失败，请检查交易所后缀").format(vt_symbol))
-            self.thread = None
-            return
-
-        req: HistoryRequest = HistoryRequest(
-            symbol=symbol,
-            exchange=exchange,
-            interval=Interval(interval),
-            start=start,
-            end=end
+        req: SectorHistoryRequest = SectorHistoryRequest(
+            section=section,
+            tick_date=backtester_date,
+            daily_start=backtester_date - timedelta(days=30),
+            daily_end=backtester_date
         )
 
         try:
-            if interval == "tick":
-                data: List[TickData] = self.datafeed.query_tick_history(req, self.write_log)
-            else:
-                contract: Optional[ContractData] = self.main_engine.get_contract(vt_symbol)
-
-                # If history data provided in gateway, then query
-                if contract and contract.history_data:
-                    data: List[BarData] = self.main_engine.query_history(
-                        req, contract.gateway_name
-                    )
-                # Otherwise use RQData to query data
-                else:
-                    data: List[BarData] = self.datafeed.query_bar_history(req, self.write_log)
-
+            data: SectorData = self.datafeed.query_section_history(req, self.write_log)
             if data:
-                if interval == "tick":
-                    self.database.save_tick_data(data)
-                else:
-                    self.database.save_bar_data(data)
-
-                self.write_log(_("{}-{}历史数据下载完成").format(vt_symbol, interval))
+                self.database.save_bar_data(data)
+                self.write_log(_("{}-{}历史数据下载完成").format(section, backtester_date))
             else:
-                self.write_log(_("数据下载失败，无法获取{}的历史数据").format(vt_symbol))
+                self.write_log(_("数据下载失败，无法获取{}的历史数据").format(section))
         except Exception:
             msg: str = _("数据下载失败，触发异常：\n{}").format(traceback.format_exc())
             self.write_log(msg)
@@ -439,11 +403,9 @@ class BacktesterEngine(BaseEngine):
         self.thread = None
 
     def start_downloading(
-        self,
-        vt_symbol: str,
-        interval: str,
-        start: datetime,
-        end: datetime
+            self,
+            section: str,
+            backtester_date: datetime
     ) -> bool:
         if self.thread:
             self.write_log(_("已有任务在运行中，请等待完成"))
@@ -453,10 +415,8 @@ class BacktesterEngine(BaseEngine):
         self.thread = Thread(
             target=self.run_downloading,
             args=(
-                vt_symbol,
-                interval,
-                start,
-                end
+                section,
+                backtester_date
             )
         )
         self.thread.start()

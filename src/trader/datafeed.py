@@ -1,9 +1,9 @@
 from abc import ABC
 from types import ModuleType
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Dict
 from importlib import import_module
 
-from .object import HistoryRequest, TickData, BarData
+from .object import HistoryRequest, TickData, BarData, SectorHistoryRequest, SectorData
 from .setting import SETTINGS
 from .locale import _
 
@@ -30,6 +30,12 @@ class BaseDatafeed(ABC):
         Query history tick data.
         """
         output(_("查询Tick数据失败：没有正确配置数据服务"))
+
+    def query_section_history(self, req: SectorHistoryRequest, output: Callable = print) -> Optional[SectorData]:
+        """
+        Query history tick data.
+        """
+        output(_("查询Sector数据失败：没有正确配置数据服务"))
 
 
 datafeed: BaseDatafeed = None

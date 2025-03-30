@@ -5,7 +5,7 @@ Basic data structure used for general trading function in the trading platform.
 from dataclasses import dataclass, field
 from datetime import datetime
 from logging import INFO
-from typing import Optional
+from typing import Optional, Dict, List
 
 from .constant import Direction, Exchange, Interval, Offset, Status, Product, OptionType, OrderType
 
@@ -105,6 +105,12 @@ class BarData(BaseData):
         """"""
         self.vt_symbol: str = f"{self.symbol}.{self.exchange.value}"
 
+
+@dataclass
+class SectorData(BaseData):
+    sector: str
+    tick_data: Dict[str, List[TickData]]
+    daily_bar_data: Dict[str, List[BarData]]
 
 @dataclass
 class OrderData(BaseData):
@@ -240,19 +246,19 @@ class ContractData(BaseData):
     size: float
     pricetick: float
 
-    min_volume: float = 1           # minimum order volume
-    max_volume: float = None        # maximum order volume
-    stop_supported: bool = False    # whether server supports stop order
-    net_position: bool = False      # whether gateway uses net position volume
-    history_data: bool = False      # whether gateway provides bar history data
+    min_volume: float = 1  # minimum order volume
+    max_volume: float = None  # maximum order volume
+    stop_supported: bool = False  # whether server supports stop order
+    net_position: bool = False  # whether gateway uses net position volume
+    history_data: bool = False  # whether gateway provides bar history data
 
     option_strike: float = 0
-    option_underlying: str = ""     # vt_symbol of underlying contract
+    option_underlying: str = ""  # vt_symbol of underlying contract
     option_type: OptionType = None
     option_listed: datetime = None
     option_expiry: datetime = None
     option_portfolio: str = ""
-    option_index: str = ""          # for identifying options with same strike price
+    option_index: str = ""  # for identifying options with same strike price
 
     def __post_init__(self) -> None:
         """"""
@@ -387,6 +393,18 @@ class HistoryRequest:
     def __post_init__(self) -> None:
         """"""
         self.vt_symbol: str = f"{self.symbol}.{self.exchange.value}"
+
+
+@dataclass
+class SectorHistoryRequest:
+    """
+    Request sending to specific gateway for querying history data.
+    """
+
+    section: str
+    tick_date: datetime
+    daily_start: datetime = None
+    daily_end: datetime = None
 
 
 @dataclass
