@@ -1,9 +1,9 @@
 from abc import ABC
 from types import ModuleType
-from typing import Optional, List, Callable, Dict
+from typing import Optional, List, Callable
 from importlib import import_module
 
-from .object import HistoryRequest, TickData, BarData, SectorHistoryRequest, SectorData
+from .object import HistoryRequest, TickData, BarData
 from .setting import SETTINGS
 from .locale import _
 

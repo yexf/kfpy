@@ -134,6 +134,8 @@ class Exchange(Enum):
     IBKRATS = "IBKRATS"     # Paper Trading Exchange of IB
 
     # Special Function
+    DOWNLOAD = "DOWNLOAD"   # For local generated data
+    GET = "GET"             # For local generated data
     LOCAL = "LOCAL"         # For local generated data
 
 

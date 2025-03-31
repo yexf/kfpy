@@ -17,9 +17,8 @@ from src.trader.constant import (
     Interval,
     Status
 )
-from src.trader.database import get_database, BaseDatabase
-from src.trader.object import OrderData, TradeData, BarData, TickData, SectorHistoryRequest, SectorData
-from src.trader.utility import round_to, extract_vt_symbol
+from src.trader.object import OrderData, TradeData, BarData, TickData, HistoryRequest
+from src.trader.utility import round_to
 from src.trader.optimize import (
     OptimizationSetting,
     check_optimization_setting,
@@ -37,7 +36,7 @@ from .base import (
 )
 from .template import DVPTemplate
 from src.util.utility import locate as _
-from ...util.bond_util import build_sector_data, load_bond_data
+from ...trader.datafeed import BaseDatafeed, get_datafeed
 
 
 class DVPBacktestingEngine:
@@ -71,7 +70,8 @@ class DVPBacktestingEngine:
         self.interval: Interval = None
         self.days: int = 0
         self.callback: Callable = None
-        self.history_data: list = []
+        self.tick_history_data: list = []
+        self.bar_history_data: list = []
 
         self.stop_order_count: int = 0
         self.stop_orders: Dict[str, StopOrder] = {}
@@ -88,6 +88,7 @@ class DVPBacktestingEngine:
 
         self.daily_results: Dict[date, DailyResult] = {}
         self.daily_df: DataFrame = None
+        self.datafeed: BaseDatafeed = get_datafeed()
 
     def clear_data(self) -> None:
         """
@@ -155,13 +156,20 @@ class DVPBacktestingEngine:
     def load_data(self) -> None:
         """"""
         self.output(_("开始加载历史数据"))
-        req: SectorHistoryRequest = SectorHistoryRequest(
-            sector=self.section,
-            date=self.backtester_date
-        )
-        sector_data: SectorData = build_sector_data(req)
-        load_bond_data(sector_data, self.output)
-        self.output(_("历史数据加载完成，数据量：{}").format(len(self.history_data)))
+        # req: SectorHistoryRequest = SectorHistoryRequest(
+        #     sector=self.section,
+        #     date=self.backtester_date
+        # )
+        # sector_data: SectorData = build_sector_data(req)
+        # load_bond_data(sector_data, self.output)
+
+        tick_req: HistoryRequest = HistoryRequest(symbol=self.section, exchange=Exchange.GET, start=self.backtester_date,
+                                                  interval=Interval.TICK)
+        daily_req: HistoryRequest = HistoryRequest(symbol=self.section, exchange=Exchange.GET, start=self.backtester_date,
+                                                   interval=Interval.DAILY)
+        self.tick_history_data = self.datafeed.query_tick_history(tick_req, self.output)
+        self.bar_history_data = self.datafeed.query_bar_history(daily_req, self.output)
+        self.output(_("历史数据加载完成，数据量：{} - {}").format(len(self.tick_history_data), len(self.bar_history_data)))
 
     def run_backtesting(self) -> None:
         """"""

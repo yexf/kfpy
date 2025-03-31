@@ -4,4 +4,6 @@
 @Time      :2022/11/8 16:48
 @Author    :fsksf
 """
-from src.gateway.qmt.qmt_gateway import QmtGateway
+
+from .qmt_gateway import QmtGateway
+from .qmt_datafeed import QmtDatafeed as Datafeed

@@ -12,13 +12,10 @@ from typing import Optional
 
 from src.app.dvp_strategy import DVPTemplate
 from src.event import Event, EventEngine
-from src.gateway.qmt.utils import to_vn_contract
 from src.trader.engine import BaseEngine, MainEngine
-from src.trader.constant import Interval
-from src.trader.utility import extract_vt_symbol
-from src.trader.object import HistoryRequest, TickData, ContractData, BarData, SectorHistoryRequest, SectorData
+from src.trader.constant import Interval, Exchange
 from src.trader.datafeed import BaseDatafeed, get_datafeed
-from src.trader.database import BaseDatabase, get_database, TickOverview, BarOverview
+from src.trader.database import BaseDatabase, get_database
 
 import src.app.dvp_strategy
 from src.app.dvp_strategy.backtesting import (
@@ -26,9 +23,8 @@ from src.app.dvp_strategy.backtesting import (
     OptimizationSetting,
     BacktestingMode
 )
-from src.util.data_tool.eastmoney_bond import get_bond_info
+from src.trader.object import HistoryRequest
 from src.util.utility import locate as _
-from src.util.bond_util import get_live_bond_info, build_sector_data, download_bond_data
 
 APP_NAME = "DVPBacktester"
 
@@ -181,7 +177,7 @@ class BacktesterEngine(BaseEngine):
         )
 
         engine.load_data()
-        if not engine.history_data:
+        if not engine.tick_history_data:
             self.write_log(_("策略回测失败，历史数据为空"))
             self.thread = None
             return
@@ -383,16 +379,14 @@ class BacktesterEngine(BaseEngine):
         """
         self.write_log(_("{}-{}开始下载历史数据").format(section, backtester_date))
         try:
-            req: SectorHistoryRequest = SectorHistoryRequest(
-                sector=section,
-                date=backtester_date
-            )
-            sector_data: SectorData = build_sector_data(req)
-            if sector_data is not None:
-                download_bond_data(self.database, self.datafeed, sector_data, self.write_log)
-                self.write_log(_("{}-{}历史数据下载完成").format(section, backtester_date))
-            else:
-                self.write_log(_("数据下载失败，无法获取{}的历史数据").format(section))
+            # 不设置end 的 req 只是下载
+            tick_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD, start=backtester_date,
+                                                      interval=Interval.TICK)
+            daily_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD, start=backtester_date,
+                                                      interval=Interval.DAILY)
+            self.datafeed.query_tick_history(tick_req, self.write_log)
+            self.datafeed.query_bar_history(daily_req, self.write_log)
+            self.write_log(_("{}-{}历史数据下载完成").format(section, backtester_date))
         except Exception:
             msg: str = _("数据下载失败，触发异常：\n{}").format(traceback.format_exc())
             self.write_log(msg)

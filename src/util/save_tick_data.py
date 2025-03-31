@@ -57,38 +57,6 @@ def pre_day(date_str: str) -> str:
     return dt.strftime("%Y%m%d")
 
 
-INTERVAL_Sec2VT: dict[str, str] = {
-    "0": Interval.TICK.value,
-    "60": Interval.MINUTE.value,
-    "86400": Interval.DAILY.value,
-}
-
-
-def build_donwload_file_info() -> dict[str, set]:
-    data_path = get_data_path()
-    download_file_info = {}
-    files_info = {}
-    for files in os.listdir(data_path):
-        if files == "SH" or files == "SZ":
-            path: str = os.path.join(data_path, files)
-            for root, dirs, files in os.walk(path):
-                if len(dirs) == 0:
-                    files_info[root] = files
-    for key in files_info:
-        path: Path = Path(key)
-        if path.parent.name in INTERVAL_Sec2VT:
-            exchange = path.parent.parent.name
-            symbol = path.name
-            date_list = files_info[key]
-            date_info = set()
-            for date_dat in date_list:
-                date, suffix = date_dat.rsplit('.')
-                date_info.add(date)
-            xt_symbol = f"{symbol}.{exchange}"
-            download_file_info[xt_symbol] = date_info
-    return download_file_info
-
-
 def build_download_plan(start_time: str = '20250101'):
     """  创建下载计划
     :param start_time: 开始时间 ，格式YYYYMMDD e.g. "20250101"
