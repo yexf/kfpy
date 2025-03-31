@@ -1,4 +1,7 @@
+import os
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from time import sleep
 from tqdm import tqdm
 from xtquant import xtdata
@@ -6,16 +9,19 @@ from xtquant import xtdata
 from src.event import EventEngine
 from src.gateway.qmt import QmtGateway
 from src.gateway.qmt.utils import TO_VN_Exchange_map, timestamp_to_datetime
+from src.trader.constant import Interval
 from src.trader.database import get_database
 from src.trader.object import TickData
 from src.util import timer
 from src.util.data_tool.eastmoney_bond import get_bond_info
 from src.util.timer import get_datatime
 from src.trader.utility import load_json, save_json
+from src.util.utility import get_data_path
 
 pbar = None
 last_finished = 0
-conv_bond_info = get_bond_info("conv_bond_all.json")
+conv_bond_infos = get_bond_info("conv_bond_all.json")
+
 
 def jdt_clean():
     global pbar
@@ -51,6 +57,38 @@ def pre_day(date_str: str) -> str:
     return dt.strftime("%Y%m%d")
 
 
+INTERVAL_Sec2VT: dict[str, str] = {
+    "0": Interval.TICK.value,
+    "60": Interval.MINUTE.value,
+    "86400": Interval.DAILY.value,
+}
+
+
+def build_donwload_file_info() -> dict[str, set]:
+    data_path = get_data_path()
+    download_file_info = {}
+    files_info = {}
+    for files in os.listdir(data_path):
+        if files == "SH" or files == "SZ":
+            path: str = os.path.join(data_path, files)
+            for root, dirs, files in os.walk(path):
+                if len(dirs) == 0:
+                    files_info[root] = files
+    for key in files_info:
+        path: Path = Path(key)
+        if path.parent.name in INTERVAL_Sec2VT:
+            exchange = path.parent.parent.name
+            symbol = path.name
+            date_list = files_info[key]
+            date_info = set()
+            for date_dat in date_list:
+                date, suffix = date_dat.rsplit('.')
+                date_info.add(date)
+            xt_symbol = f"{symbol}.{exchange}"
+            download_file_info[xt_symbol] = date_info
+    return download_file_info
+
+
 def build_download_plan(start_time: str = '20250101'):
     """  创建下载计划
     :param start_time: 开始时间 ，格式YYYYMMDD e.g. "20250101"
@@ -68,7 +106,7 @@ def build_download_plan(start_time: str = '20250101'):
 
     format_str = "%Y-%m-%d %H:%M:%S"
     download_plan = {}
-    for bi in conv_bond_info:
+    for bi in conv_bond_infos:
         exchange = bi["交易市场"]
         if exchange != "CNSESZ" and exchange != "CNSESH":
             continue

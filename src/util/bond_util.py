@@ -7,14 +7,40 @@ from src.trader.database import TickOverview, BarOverview, BaseDatabase, get_dat
 from src.trader.datafeed import BaseDatafeed
 from src.trader.object import SubscribeRequest, SectorHistoryRequest, SectorData, HistoryRequest, BarData, TickData, \
     SectorDataItem
-from src.util.save_tick_data import conv_bond_info
+from src.util.save_tick_data import conv_bond_infos
 
 
-def get_live_bond_info(dt):
+def get_bond_info(dt: datetime) -> List[List[SubscribeRequest]]:
     bond_infos: list[SubscribeRequest] = []
     stock_infos: list[SubscribeRequest] = []
     format_str = "%Y-%m-%d %H:%M:%S"
-    for bi in conv_bond_info:
+    dt = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    for bi in conv_bond_infos:
+        exchange = bi["交易市场"]
+        if exchange != "CNSESZ" and exchange != "CNSESH":
+            continue
+        code = bi["交易代码"]
+        code, exchange = to_vn_contract(code)
+        stock_code = bi['正股代码']
+        dedate = bi["退市日期"]
+        indate = bi["上市日期"]
+        if dedate is not None:
+            dedate = datetime.strptime(dedate, format_str)
+        if indate is None:
+            continue
+        indate = datetime.strptime(indate, format_str)
+        if indate <= dt:
+            if dedate is None or dedate > dt:
+                bond_infos.append(SubscribeRequest(symbol=code, exchange=exchange))
+                stock_infos.append(SubscribeRequest(symbol=stock_code, exchange=exchange))
+    return [bond_infos, stock_infos]
+
+
+def get_live_bond_info(dt) -> List[List[SubscribeRequest]]:
+    bond_infos: list[SubscribeRequest] = []
+    stock_infos: list[SubscribeRequest] = []
+    format_str = "%Y-%m-%d %H:%M:%S"
+    for bi in conv_bond_infos:
         exchange = bi["交易市场"]
         if exchange != "CNSESZ" and exchange != "CNSESH":
             continue
@@ -32,7 +58,7 @@ def get_live_bond_info(dt):
             if dedate is None or dedate > dt:
                 bond_infos.append(SubscribeRequest(symbol=code, exchange=exchange))
                 stock_infos.append(SubscribeRequest(symbol=stock_code, exchange=exchange))
-    return bond_infos, stock_infos
+    return [bond_infos, stock_infos]
 
 
 def build_sector_data(req: SectorHistoryRequest) -> Union[SectorData, None]:

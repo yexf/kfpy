@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 from xtquant import xtdata
 from src.util import timer
-from src.util.save_tick_data import conv_bond_info, jdt_clean, on_process
+from src.util.save_tick_data import conv_bond_infos, jdt_clean, on_process
 from src.util.timer import get_datatime
 
 
@@ -10,7 +10,7 @@ def get_live_bond_info(datestr):
     bond_infos = {}
     format_str = "%Y-%m-%d %H:%M:%S"
     dt = datetime.strptime(datestr, "%Y%m%d")
-    for bi in conv_bond_info:
+    for bi in conv_bond_infos:
         code = bi["交易代码"]
         dedate = bi["退市日期"]
         indate = bi["上市日期"]
