@@ -174,7 +174,7 @@ class BacktesterEngine(BaseEngine):
             mode=mode
         )
 
-        strategy_class: type = self.classes[class_name]
+        strategy_class: type[DVPTemplate] = self.classes[class_name]
         engine.add_strategy(
             strategy_class,
             setting
@@ -380,7 +380,7 @@ class BacktesterEngine(BaseEngine):
 
         for code in sector_data.daily_data:
             bar_data = sector_data.daily_data[code]
-            self.database.save_bar_data(bar_data, True)
+            self.database.save_bar_data(bar_data)
 
     def query_sector_data(self, req: SectorHistoryRequest) -> SectorData:
         bond_infos, stock_infos = get_live_bond_info(req.date, conv_bond_info)
@@ -413,7 +413,7 @@ class BacktesterEngine(BaseEngine):
             daily_req: HistoryRequest = HistoryRequest(
                 symbol=code.symbol,
                 exchange=code.exchange,
-                start=req.date - timedelta(days=30),
+                start=req.date - timedelta(days=30*6),
                 end=req.date,
                 interval=Interval.DAILY
             )

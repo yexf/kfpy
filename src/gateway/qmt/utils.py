@@ -5,7 +5,7 @@
 @Author    :fsksf
 """
 import datetime
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from src.trader.object import OrderRequest, SubscribeRequest
 from src.trader.constant import Exchange, Product, OrderType, Direction, Status
@@ -110,7 +110,7 @@ def get_live_bond_info(dt, conv_bond_info):
         if indate is None:
             continue
         indate = datetime.strptime(indate, format_str)
-        if indate < dt:
+        if indate + timedelta(days=30 * 6) < dt:
             if dedate is None or dedate > dt:
                 bond_infos.append(SubscribeRequest(symbol=code, exchange=exchange))
                 stock_infos.append(SubscribeRequest(symbol=stock_code, exchange=exchange))

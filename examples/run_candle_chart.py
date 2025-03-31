@@ -1,22 +1,29 @@
 from datetime import datetime
 
 from src.trader.constant import Exchange, Interval
-from src.trader.database import get_database
+from src.trader.database import get_database, BarOverview
 from src.trader.ui import create_qapp
 from src.chart import ChartWidget, VolumeItem, CandleItem
+from src.util.dtshare import get_index_data
 
 if __name__ == "__main__":
-    app = create_qapp()
-
     database = get_database()
-    bars = database.load_bar_data(
-        "sh000001",
-        Exchange.SSE,
-        interval=Interval.DAILY,
-        start=datetime(1970, 1, 1),
-        end=datetime.now()
-    )
-
+    bar_overview: list[BarOverview] = database.get_bar_overview()
+    code: str = 'sh000001'
+    bars = None
+    for bar in bar_overview:
+        if code == bar.symbol:
+            bars = database.load_bar_data(
+                code,
+                Exchange.SSE,
+                interval=Interval.DAILY,
+                start=datetime(1970, 1, 1),
+                end=datetime.now()
+            )
+    if bars is None:
+        sh001 = get_index_data()
+        bars = database.save_bar_data(sh001)
+    app = create_qapp()
     widget = ChartWidget()
     widget.add_plot("candle", hide_x_axis=True)
     widget.add_plot("volume", maximum_height=150)

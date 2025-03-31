@@ -47,11 +47,10 @@ class DVPBacktestingEngine:
 
     def __init__(self) -> None:
         """"""
-        self.vt_symbol: str = ""
-        self.symbol: str = ""
-        self.exchange: Exchange = None
-        self.start: datetime = None
-        self.end: datetime = None
+        self.setting = None
+        self.section: str = ""
+        self.choose_strategy: str = ""
+        self.backtester_date: datetime = None
         self.rate: float = 0
         self.slippage: float = 0
         self.size: float = 1
@@ -114,7 +113,6 @@ class DVPBacktestingEngine:
 
     def set_parameters(
             self,
-            class_name: str,
             section: str,
             choose_strategy: str,
             backtester_date: datetime,
@@ -123,7 +121,6 @@ class DVPBacktestingEngine:
             size: float,
             pricetick: float,
             capital: int = 0,
-            end: datetime = None,
             mode: BacktestingMode = BacktestingMode.BAR,
             risk_free: float = 0,
             annual_days: int = 240,
@@ -131,22 +128,15 @@ class DVPBacktestingEngine:
     ) -> None:
         """"""
         self.mode = mode
-        self.vt_symbol = vt_symbol
-        self.interval = Interval(interval)
+        self.section = section
+        self.choose_strategy = choose_strategy
+        self.backtester_date = backtester_date
         self.rate = rate
         self.slippage = slippage
         self.size = size
         self.pricetick = pricetick
-        self.start = start
-
-        self.symbol, exchange_str = self.vt_symbol.split(".")
-        self.exchange = Exchange(exchange_str)
 
         self.capital = capital
-
-        if not end:
-            end = datetime.now()
-        self.end = end.replace(hour=23, minute=59, second=59)
 
         self.mode = mode
         self.risk_free = risk_free
@@ -156,9 +146,10 @@ class DVPBacktestingEngine:
     def add_strategy(self, strategy_class: Type[DVPTemplate], setting: dict) -> None:
         """"""
         self.strategy_class = strategy_class
-        self.strategy = strategy_class(
-            self, strategy_class.__name__, self.vt_symbol, setting
-        )
+        self.setting = setting
+        # self.strategy = strategy_class(
+        #     self, strategy_class.__name__, self.vt_symbol, setting
+        # )
 
     def load_data(self) -> None:
         """"""
