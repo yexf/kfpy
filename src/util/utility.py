@@ -1,20 +1,17 @@
 """
 General utility functions.
 """
-
+import datetime
 import json
 import os
 from collections import namedtuple
-from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Union
 
 from xtquant import xtdata
 
-from src.trader.object import ContractData
 from src.trader.utility import load_json, save_json
-
 
 def locate(word):
     return word
@@ -114,23 +111,3 @@ def thread_hold():
     t = threading.Thread(target=slp)
     t.start()
     t.join()
-
-
-def dict_conv_contract(contract_dict: dict) -> ContractData:
-    def dict_to_dataclass(cls, data):
-        return cls(**data)
-
-    contract: ContractData = dict_to_dataclass(ContractData, contract_dict)
-    return contract
-
-
-def contract_to_dict(contract: ContractData) -> dict:
-    contract_dict = asdict(contract)
-    del contract_dict['extra']
-    exchange = contract_dict["exchange"]
-    product = contract_dict["product"]
-    contract_dict["exchange"] = exchange.value
-    contract_dict["product"] = product.value
-    return contract_dict
-
-

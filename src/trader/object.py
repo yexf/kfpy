@@ -107,14 +107,6 @@ class BarData(BaseData):
 
 
 @dataclass
-class SectorData(BaseData):
-    sector: str
-    contract_list: List[str]
-    date: datetime
-    tick_data: Dict[str, List[TickData]]
-    daily_data: Dict[str, List[BarData]]
-
-@dataclass
 class OrderData(BaseData):
     """
     Order data contains information for tracking lastest status
@@ -325,6 +317,20 @@ class SubscribeRequest:
     def __post_init__(self) -> None:
         """"""
         self.vt_symbol: str = f"{self.symbol}.{self.exchange.value}"
+
+@dataclass
+class SectorDataItem:
+    tick_data: List[TickData]
+    daily_data: List[BarData]
+
+
+
+@dataclass
+class SectorData(BaseData):
+    sector: str
+    contract_list: List[SubscribeRequest]
+    date: datetime
+    data: Dict[str, SectorDataItem]
 
 
 @dataclass

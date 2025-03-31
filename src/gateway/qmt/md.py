@@ -17,11 +17,25 @@ import xtquant.xttype
 from .utils import (
     From_VN_Exchange_map, TO_VN_Exchange_map, to_vn_product, timestamp_to_datetime
 )
-from ...util.utility import dict_conv_contract, contract_to_dict
 from ...trader.utility import load_json, save_json
 from ...trader.constant import Product
 
+def dict_conv_contract(contract_dict: dict) -> ContractData:
+    def dict_to_dataclass(cls, data):
+        return cls(**data)
 
+    contract: ContractData = dict_to_dataclass(ContractData, contract_dict)
+    return contract
+
+
+def contract_to_dict(contract: ContractData) -> dict:
+    contract_dict = asdict(contract)
+    del contract_dict['extra']
+    exchange = contract_dict["exchange"]
+    product = contract_dict["product"]
+    contract_dict["exchange"] = exchange.value
+    contract_dict["product"] = product.value
+    return contract_dict
 # qmt行情接口
 class MD:
 

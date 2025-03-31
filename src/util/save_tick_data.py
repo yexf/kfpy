@@ -16,10 +16,6 @@ from src.trader.utility import load_json, save_json
 pbar = None
 last_finished = 0
 conv_bond_info = get_bond_info("conv_bond_all.json")
-event_engine = EventEngine()
-qmt = QmtGateway(event_engine)
-database = get_database()
-
 
 def jdt_clean():
     global pbar
@@ -135,7 +131,7 @@ def do_download_plan(download_config_file: str, download_plan: dict) -> None:
         save_json(download_config_file, download_config)
 
 
-def conv_tick(datas):
+def conv_tick(qmt_gateway, datas):
     tick_list = []
     for code, data_list in datas.items():
         symbol, suffix = code.rsplit('.')
@@ -147,7 +143,7 @@ def conv_tick(datas):
             bid_vol = data['bidVol']
 
             tick = TickData(
-                gateway_name=qmt.gateway_name,
+                gateway_name=qmt_gateway.gateway_name,
                 symbol=symbol,
                 exchange=exchange,
                 datetime=timestamp_to_datetime(data['time']),
@@ -183,7 +179,7 @@ def conv_tick(datas):
                 bid_volume_4=bid_vol[3],
                 bid_volume_5=bid_vol[4],
             )
-            contract = qmt.get_contract(tick.symbol)
+            contract = qmt_gateway.get_contract(tick.symbol)
             if contract:
                 tick.name = contract.name
             tick.limit_up = data['lastPrice'] * 1.2
@@ -192,25 +188,26 @@ def conv_tick(datas):
     return tick_list
 
 
-def do_dumpdb(code, start_date, end_date):
+def do_dumpdb(qmt_gateway, database_engine, code, start_date, end_date):
     start_time_dt = datetime.strptime(start_date, "%Y%m%d")
     end_time_dt = datetime.strptime(end_date, "%Y%m%d")
     start_time = get_datatime(start_time_dt, "start")
     end_time = get_datatime(end_time_dt, "end")
     data = xtdata.get_market_data([], [code], "tick",
                                   timer.to_tick_market_str(start_time), timer.to_tick_market_str(end_time))
-    tick_list = conv_tick(data)
+    tick_list = conv_tick(qmt_gateway, data)
     print("保存tick数据到数据库", code, start_date, end_date)
-    database.save_tick_data(tick_list, True)
+    database_engine.save_tick_data(tick_list, True)
 
 
-def do_dumpdb_plan(download_config_file: str) -> None:
+def do_dumpdb_plan(qmt_gateway, database_engine, download_config_file: str) -> None:
     """  执行dump tick数据到db计划
+    :param database_engine:数据库引擎
     :param download_config_file: 下载配置文件 e.g. "download_config.json"
     :param download_plan: dump配置文件 e.g. "dump_config.json"
     """
     download_plan = load_json(download_config_file)
-    tick_overviews = database.get_tick_overview()
+    tick_overviews = database_engine.get_tick_overview()
     tick_overview_dict = {}
     for tick_overview in tick_overviews:
         tick_overview_dict[tick_overview.symbol] = tick_overview
@@ -227,14 +224,17 @@ def do_dumpdb_plan(download_config_file: str) -> None:
                 cstart_time = next_day(to_end_time)
             if to_end_time >= end_time:
                 continue
-        do_dumpdb(code, cstart_time, end_time)
+        do_dumpdb(qmt_gateway, database_engine, code, cstart_time, end_time)
 
 
 def save_tick_data():
+    event_engine = EventEngine()
+    qmt_gateway = QmtGateway(event_engine)
+    database_engine = get_database()
     download_config_file = "download_config.json"
     download_plan = build_download_plan()
     do_download_plan(download_config_file, download_plan)
-    do_dumpdb_plan(download_config_file)
+    do_dumpdb_plan(qmt_gateway, database_engine, download_config_file)
 
 
 if __name__ == '__main__':

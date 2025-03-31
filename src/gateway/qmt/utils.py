@@ -5,9 +5,9 @@
 @Author    :fsksf
 """
 import datetime
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from src.trader.object import OrderRequest, SubscribeRequest
+from src.trader.object import OrderRequest
 from src.trader.constant import Exchange, Product, OrderType, Direction, Status
 from xtquant import xtconstant, xtdata
 
@@ -92,26 +92,3 @@ def timestamp_to_datetime(tint):
     return datetime.datetime.fromtimestamp(tint)
 
 
-def get_live_bond_info(dt, conv_bond_info):
-    bond_infos: list[SubscribeRequest] = []
-    stock_infos: list[SubscribeRequest] = []
-    format_str = "%Y-%m-%d %H:%M:%S"
-    for bi in conv_bond_info:
-        exchange = bi["交易市场"]
-        if exchange != "CNSESZ" and exchange != "CNSESH":
-            continue
-        code = bi["交易代码"]
-        code, exchange = to_vn_contract(code)
-        stock_code = bi['正股代码']
-        dedate = bi["退市日期"]
-        indate = bi["上市日期"]
-        if dedate is not None:
-            dedate = datetime.strptime(dedate, format_str)
-        if indate is None:
-            continue
-        indate = datetime.strptime(indate, format_str)
-        if indate + timedelta(days=30 * 6) < dt:
-            if dedate is None or dedate > dt:
-                bond_infos.append(SubscribeRequest(symbol=code, exchange=exchange))
-                stock_infos.append(SubscribeRequest(symbol=stock_code, exchange=exchange))
-    return bond_infos, stock_infos

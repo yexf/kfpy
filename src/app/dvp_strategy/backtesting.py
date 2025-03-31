@@ -18,7 +18,7 @@ from src.trader.constant import (
     Status
 )
 from src.trader.database import get_database, BaseDatabase
-from src.trader.object import OrderData, TradeData, BarData, TickData
+from src.trader.object import OrderData, TradeData, BarData, TickData, SectorHistoryRequest, SectorData
 from src.trader.utility import round_to, extract_vt_symbol
 from src.trader.optimize import (
     OptimizationSetting,
@@ -37,6 +37,7 @@ from .base import (
 )
 from .template import DVPTemplate
 from src.util.utility import locate as _
+from ...util.bond_util import build_sector_data, load_bond_data
 
 
 class DVPBacktestingEngine:
@@ -154,56 +155,12 @@ class DVPBacktestingEngine:
     def load_data(self) -> None:
         """"""
         self.output(_("开始加载历史数据"))
-
-        if not self.end:
-            self.end = datetime.now()
-
-        if self.start >= self.end:
-            self.output(_("起始日期必须小于结束日期"))
-            return
-
-        self.history_data.clear()  # Clear previously loaded history data
-
-        # Load 30 days of data each time and allow for progress update
-        total_days: int = (self.end - self.start).days
-        progress_days: int = max(int(total_days / 10), 1)
-        progress_delta: timedelta = timedelta(days=progress_days)
-        interval_delta: timedelta = INTERVAL_DELTA_MAP[self.interval]
-
-        start: datetime = self.start
-        end: datetime = self.start + progress_delta
-        progress = 0
-
-        while start < self.end:
-            progress_bar: str = "#" * int(progress * 10 + 1)
-            self.output(_("加载进度：{} [{:.0%}]").format(progress_bar, progress))
-
-            end: datetime = min(end, self.end)  # Make sure end time stays within set range
-
-            if self.mode == BacktestingMode.BAR:
-                data: List[BarData] = load_bar_data(
-                    self.symbol,
-                    self.exchange,
-                    self.interval,
-                    start,
-                    end
-                )
-            else:
-                data: List[TickData] = load_tick_data(
-                    self.symbol,
-                    self.exchange,
-                    start,
-                    end
-                )
-
-            self.history_data.extend(data)
-
-            progress += progress_days / total_days
-            progress = min(progress, 1)
-
-            start = end + interval_delta
-            end += progress_delta
-
+        req: SectorHistoryRequest = SectorHistoryRequest(
+            sector=self.section,
+            date=self.backtester_date
+        )
+        sector_data: SectorData = build_sector_data(req)
+        load_bond_data(sector_data, self.output)
         self.output(_("历史数据加载完成，数据量：{}").format(len(self.history_data)))
 
     def run_backtesting(self) -> None:
@@ -768,50 +725,6 @@ class DVPBacktestingEngine:
             self.strategy.pos += pos_change
             self.strategy.on_trade(trade)
 
-    def load_bar(
-            self,
-            vt_symbol: str,
-            days: int,
-            interval: Interval,
-            callback: Callable,
-            use_database: bool
-    ) -> List[BarData]:
-        """"""
-        self.callback = callback
-
-        init_end = self.start - INTERVAL_DELTA_MAP[interval]
-        init_start = self.start - timedelta(days=days)
-
-        symbol, exchange = extract_vt_symbol(vt_symbol)
-
-        bars: List[BarData] = load_bar_data(
-            symbol,
-            exchange,
-            interval,
-            init_start,
-            init_end
-        )
-
-        return bars
-
-    def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> List[TickData]:
-        """"""
-        self.callback = callback
-
-        init_end = self.start - timedelta(seconds=1)
-        init_start = self.start - timedelta(days=days)
-
-        symbol, exchange = extract_vt_symbol(vt_symbol)
-
-        ticks: List[TickData] = load_tick_data(
-            symbol,
-            exchange,
-            init_start,
-            init_end
-        )
-
-        return ticks
-
     def send_order(
             self,
             strategy: DVPTemplate,
@@ -1064,37 +977,6 @@ class DailyResult:
         # Net pnl takes account of commission and slippage cost
         self.total_pnl = self.trading_pnl + self.holding_pnl
         self.net_pnl = self.total_pnl - self.commission - self.slippage
-
-
-@lru_cache(maxsize=999)
-def load_bar_data(
-        symbol: str,
-        exchange: Exchange,
-        interval: Interval,
-        start: datetime,
-        end: datetime
-) -> List[BarData]:
-    """"""
-    database: BaseDatabase = get_database()
-
-    return database.load_bar_data(
-        symbol, exchange, interval, start, end
-    )
-
-
-@lru_cache(maxsize=999)
-def load_tick_data(
-        symbol: str,
-        exchange: Exchange,
-        start: datetime,
-        end: datetime
-) -> List[TickData]:
-    """"""
-    database: BaseDatabase = get_database()
-
-    return database.load_tick_data(
-        symbol, exchange, start, end
-    )
 
 
 def evaluate(
