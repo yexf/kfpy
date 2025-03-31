@@ -155,13 +155,7 @@ class DVPBacktestingEngine:
 
     def load_data(self) -> None:
         """"""
-        self.output(_("开始加载历史数据"))
-        # req: SectorHistoryRequest = SectorHistoryRequest(
-        #     sector=self.section,
-        #     date=self.backtester_date
-        # )
-        # sector_data: SectorData = build_sector_data(req)
-        # load_bond_data(sector_data, self.output)
+        self.output(_("开始加载历史数据 {}-{}").format(self.section, self.backtester_date.date()))
 
         tick_req: HistoryRequest = HistoryRequest(symbol=self.section, exchange=Exchange.GET, start=self.backtester_date,
                                                   interval=Interval.TICK)
@@ -169,7 +163,7 @@ class DVPBacktestingEngine:
                                                    interval=Interval.DAILY)
         self.tick_history_data = self.datafeed.query_tick_history(tick_req, self.output)
         self.bar_history_data = self.datafeed.query_bar_history(daily_req, self.output)
-        self.output(_("历史数据加载完成，数据量：{} - {}").format(len(self.tick_history_data), len(self.bar_history_data)))
+        self.output(_("历史数据加载完成，数据量：{}-{}").format(len(self.tick_history_data), len(self.bar_history_data)))
 
     def run_backtesting(self) -> None:
         """"""

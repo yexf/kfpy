@@ -108,7 +108,7 @@ def get_daily_data(start: datetime, end: datetime, interval: Interval, output: C
                 count += 1
             progress = count / len(xt_code_list)
             progress_bar: str = "#" * int(progress * 10 + 1)
-            output("bar加载进度: {} [{:.0%}]".format(progress_bar, progress))
+            output("bar加载: {} [{:.0%}]".format(progress_bar, progress))
             index = last
     return history
 
@@ -148,7 +148,7 @@ def get_tick_data(start: datetime, end: datetime, output: Callable = print, step
                 count += 1
             progress = count / len(xt_code_list)
             progress_bar: str = "#" * int(progress * 10 + 1)
-            output("tick加载进度：{} [{:.0%}]".format(progress_bar, progress))
+            output("tick加载：{} [{:.0%}]".format(progress_bar, progress))
             index = last
     return history
 
@@ -181,7 +181,7 @@ def download_daily_data(start: datetime, end: datetime, interval: Interval, outp
         progress = finished / total
         progress_bar: str = "#" * int(progress * 10 + 1)
 
-        output("bar下载进度：{} {} [{:.0%}]".format(message, progress_bar, progress))
+        output("bar下载：{} {} [{:.0%}]".format(message, progress_bar, progress))
 
     if len(daily_list) > 0:
         xtdata.download_history_data2(daily_list, xt_interval, start, end, out_process)
@@ -219,7 +219,7 @@ def download_tick_data(tick_donwload_info: dict[str, set], start: datetime, outp
         progress = finished / total
         progress_bar: str = "#" * int(progress * 10 + 1)
 
-        output("tick下载进度：{} {} [{:.0%}]".format(message, progress_bar, progress))
+        output("tick下载：{} {} [{:.0%}]".format(message, progress_bar, progress))
 
     if len(tick_list) > 0:
         xtdata.download_history_data2(tick_list, xt_interval, start, end, out_process)
@@ -265,6 +265,7 @@ class QmtDatafeed(BaseDatafeed):
             history: list[TickData] = []
             if req.exchange == Exchange.DOWNLOAD:
                 download_tick_data(self.tick_donwload_info, req.start, output)
+                self.tick_donwload_info = tick_donwload_file_info()
                 return history
             elif req.exchange == Exchange.GET:
                 return get_tick_data(req.start, req.start, output)

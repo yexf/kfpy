@@ -377,7 +377,7 @@ class BacktesterEngine(BaseEngine):
         """
         执行下载任务
         """
-        self.write_log(_("{}-{}开始下载历史数据").format(section, backtester_date))
+        self.write_log(_("{}-{} 开始下载历史数据").format(section, backtester_date.date()))
         try:
             # 不设置end 的 req 只是下载
             tick_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD, start=backtester_date,
@@ -386,7 +386,7 @@ class BacktesterEngine(BaseEngine):
                                                       interval=Interval.DAILY)
             self.datafeed.query_tick_history(tick_req, self.write_log)
             self.datafeed.query_bar_history(daily_req, self.write_log)
-            self.write_log(_("{}-{}历史数据下载完成").format(section, backtester_date))
+            self.write_log(_("{}-{} 历史数据下载完成").format(section, backtester_date.date()))
         except Exception:
             msg: str = _("数据下载失败，触发异常：\n{}").format(traceback.format_exc())
             self.write_log(msg)
