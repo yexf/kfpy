@@ -117,11 +117,14 @@ def thread_hold():
     t.start()
     t.join()
 
+
 INTERVAL_ADJUSTMENT_MAP: dict[Interval, timedelta] = {
     Interval.MINUTE: timedelta(minutes=1),
-    Interval.DAILY: timedelta()         # 日线无需进行调整
+    Interval.DAILY: timedelta()  # 日线无需进行调整
 }
 CHINA_TZ = ZoneInfo("Asia/Shanghai")
+
+
 def insert_bar_history(symbol: str, exchange: Exchange, interval: Interval, history: list[BarData], df: DataFrame):
     # 遍历解析
     auction_bar: BarData = None
@@ -179,7 +182,6 @@ def insert_bar_history(symbol: str, exchange: Exchange, interval: Interval, hist
             auction_bar = None
 
         history.append(bar)
-
 
 def insert_tick_history(symbol: str, exchange: Exchange, history: list[TickData], df: DataFrame):
     # 遍历解析

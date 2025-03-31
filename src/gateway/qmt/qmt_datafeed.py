@@ -10,13 +10,13 @@ from src.gateway.qmt.utils import to_vn_contract
 from src.gateway.xt.xt_datafeed import XtDatafeed
 from src.trader.constant import Exchange, Interval
 from src.trader.object import BarData, TickData, HistoryRequest, SubscribeRequest
-from src.trader.utility import ZoneInfo, get_file_path
+from src.trader.utility import ZoneInfo
 from src.trader.datafeed import BaseDatafeed
 from typing import Callable, Optional, List, Dict
 
 from src.util.bond_util import get_bond_info
-from src.util.save_tick_data import conv_bond_infos, on_process, build_donwload_file_info
-from src.util.utility import get_data_path, insert_tick_history, insert_bar_history
+from src.util.save_tick_data import on_process, build_donwload_file_info
+from src.util.utility import insert_tick_history, insert_bar_history
 
 INTERVAL_VT2XT: dict[Interval, str] = {
     Interval.MINUTE: "1m",
@@ -77,10 +77,13 @@ class QmtDatafeed(BaseDatafeed):
                 code_df: dict[str, pd.DataFrame] = get_history_df(self.donwload_file_info, bond_infos, req, output)
                 if len(code_df) == 0:
                     return history
+                progress = 0
                 for code in code_df:
                     symbol, exchange = to_vn_contract(code)
+                    progress_bar: str = "#" * int(progress * 10 + 1)
                     insert_tick_history(symbol, exchange, history, code_df[code])
-
+                    output("查询进度：{} [{:.0%}]".format(progress_bar, progress))
+                    progress += 1 / len(code_df)
             return history
 
 
@@ -140,6 +143,6 @@ if __name__ == '__main__':
         output=print)
     print(len(history))
     history = qmt_datafeed.query_bar_history(
-        req=HistoryRequest(symbol="沪深转债", exchange=Exchange.LOCAL, interval=Interval.DAILY, start=datetime.now() - timedelta(days=6*30), end=datetime.now()),
+        req=HistoryRequest(symbol="沪深转债", exchange=Exchange.LOCAL, interval=Interval.DAILY, start=datetime.now() - timedelta(days=6 * 31), end=datetime.now()),
         output=print)
     print(len(history))
