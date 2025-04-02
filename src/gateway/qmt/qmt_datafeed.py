@@ -241,13 +241,16 @@ class QmtDatafeed(BaseDatafeed):
             start = req.start - self.daily_timedelta
             daily_download_info = self.daily_download_info.get(req.symbol, {})
             # 只下载数据
-            if req.exchange == Exchange.DOWNLOAD:
+            if req.exchange == Exchange.DOWNLOAD or req.exchange == Exchange.LOCAL:
                 if end not in daily_download_info:
                     download_daily_data(req.start - self.daily_timedelta, req.start, Interval.DAILY, output)
                     daily_download_info[end] = self.daily_timedelta.days
                     self.daily_download_info[req.symbol] = daily_download_info
                     save_json(self.daily_download_info_file, self.daily_download_info)
-                return None
+                if req.exchange == Exchange.LOCAL:
+                    return get_daily_data(start, req.start, Interval.DAILY, output)
+                else:
+                    return None
             # 只获取数据
             elif req.exchange == Exchange.GET:
                 history: list[BarData] = []
@@ -262,16 +265,18 @@ class QmtDatafeed(BaseDatafeed):
 
     def query_tick_history(self, req: HistoryRequest, output: Callable = print) -> Optional[List[TickData]]:
         if req.symbol == "沪深转债":
-            history: list[TickData] = []
-            if req.exchange == Exchange.DOWNLOAD:
+            if req.exchange == Exchange.DOWNLOAD or req.exchange == Exchange.LOCAL:
                 download_tick_data(self.tick_donwload_info, req.start, output)
                 self.tick_donwload_info = tick_donwload_file_info()
-                return history
+                if req.exchange == Exchange.LOCAL:
+                    return get_tick_data(req.start, req.start, output)
+                else:
+                    return None
             elif req.exchange == Exchange.GET:
                 return get_tick_data(req.start, req.start, output)
             else:
                 return None
-        return self.xt_datafeed.query_bar_history(req, output)
+        return self.xt_datafeed.query_tick_history(req, output)
 
 
 if __name__ == '__main__':

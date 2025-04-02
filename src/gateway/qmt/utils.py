@@ -4,7 +4,6 @@
 @Time      :2022/11/8 17:07
 @Author    :fsksf
 """
-import datetime
 from datetime import datetime
 
 from src.trader.object import OrderRequest
@@ -89,6 +88,6 @@ def timestamp_to_datetime(tint):
     if st != 10:
         p = st - 10
         tint = tint / 10 ** p
-    return datetime.datetime.fromtimestamp(tint)
+    return datetime.fromtimestamp(tint)
 
 
