@@ -45,7 +45,7 @@ class BacktesterEngine(BaseEngine):
         super().__init__(main_engine, event_engine, APP_NAME)
 
         self.classes: dict = {}
-        self.backtesting_engine: dict = {}
+        self.backtesting_engine: dict[str, DVPBacktestingEngine] = {}
         self.thread: Thread = None
 
         self.datafeed: BaseDatafeed = get_datafeed()
@@ -161,6 +161,14 @@ class BacktesterEngine(BaseEngine):
 
         self.write_log(_("开始加载历史数据 {}-{}").format(section, backtester_date.date()))
 
+        daily_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.LOCAL, start=backtester_date,
+                                                   interval=Interval.DAILY)
+        bar_history_list = self.datafeed.query_bar_history(daily_req, self.write_log)
+        bar_history_data = {}
+        for bar in bar_history_list:
+            if bar.symbol not in bar_history_data:
+                bar_history_data[bar.vt_symbol] = []
+            bar_history_data[bar.vt_symbol].append(bar)
         for i in range(engine_num):
             engine: DVPBacktestingEngine = DVPBacktestingEngine()
             engine.output = self.write_log
@@ -185,29 +193,60 @@ class BacktesterEngine(BaseEngine):
                 strategy_class,
                 setting
             )
-
-            engine.load_data()
+            if bond_infos[i].vt_symbol in bar_history_data:
+                bond_bar_data = bar_history_data[bond_infos[i].vt_symbol]
+            else:
+                bond_bar_data = []
+            if stock_infos[i].vt_symbol in bar_history_data:
+                stock_bar_data = bar_history_data[stock_infos[i].vt_symbol]
+            else:
+                stock_bar_data = []
+            engine.load_data(bond_bar_data, stock_bar_data)
             if not engine.history_data:
                 self.write_log(_("策略回测失败，历史数据为空"))
                 self.thread = None
                 return
             progress = i / engine_num
             progress_bar: str = "#" * int(progress * 10 + 1)
-            self.write_log(_("加载进度：{} [{:.0%}]").format(progress_bar, progress))
+            self.write_log(_("tick加载：{} [{:.0%}]").format(progress_bar, progress))
             self.backtesting_engine[bond_infos[i].vt_symbol] = engine
 
         self.write_log(_("历史数据加载完成，引擎数：{}").format(engine_num))
         try:
-            engine.run_backtesting()
+            for vt_symbol in self.backtesting_engine.keys():
+                self.backtesting_engine[vt_symbol].init_backtester()
+            self.write_log(_("策略初始化完成"))
+            open1 = backtester_date.replace(hour=9, minute=30, second=0, microsecond=0)
+            open2 = backtester_date.replace(hour=13, minute=0, second=0, microsecond=0)
+            close1 = backtester_date.replace(hour=11, minute=30, second=0, microsecond=0)
+            close2 = backtester_date.replace(hour=15, minute=0, second=0, microsecond=0)
+            num = 3600 * 4 + 2
+            current_tick = open1
+            tick_count = 0
+            while current_tick <= close2:
+                if close1 < current_tick < open2:
+                    current_tick = open2
+                tick_count += 1
+                for vt_symbol in self.backtesting_engine.keys():
+                    self.backtesting_engine[vt_symbol].replay_backtester(current_tick)
+                current_tick += timedelta(seconds=1)
+
+                if tick_count % 600 == 0:
+                    progress = min(tick_count / num, 1)
+                    progress_bar: str = "#" * int(progress * 10 + 1)
+                    self.write_log(_("回放进度：{} [{:.0%}]").format(progress_bar, progress))
+
+            for vt_symbol in self.backtesting_engine.keys():
+                self.backtesting_engine[vt_symbol].stop_backtesting()
+                self.result_df = self.backtesting_engine[vt_symbol].calculate_result()
+                self.result_statistics = self.backtesting_engine[vt_symbol].calculate_statistics(output=False)
+            self.write_log(_("历史数据回放结束"))
         except Exception:
             msg: str = _("策略回测失败，触发异常：\n{}").format(traceback.format_exc())
             self.write_log(msg)
 
             self.thread = None
             return
-
-        self.result_df = engine.calculate_result()
-        self.result_statistics = engine.calculate_statistics(output=False)
 
         # Clear thread object handler.
         self.thread = None

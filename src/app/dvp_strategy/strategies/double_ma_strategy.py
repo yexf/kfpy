@@ -56,7 +56,7 @@ class DoubleMaStrategy(DVPTemplate):
 
         self.put_event()
 
-    def on_tick(self, tick: TickData):
+    def on_tick(self, tick: TickData, stock_tick: TickData = None) -> None:
         """
         Callback of new tick data update.
         """

@@ -73,8 +73,11 @@ class DVPBacktestingEngine:
         self.interval: Interval = None
         self.days: int = 0
         self.callback: Callable = None
-        self.history_data: list = []
-        self.history_stock_data: list = []
+        self.history_data: dict = {}
+        self.history_stock_data: dict = {}
+        self.last_stock_tick: TickData = None
+        self.bar_history_data: list = []
+        self.bar_history_stock_data: list = []
 
         self.stop_order_count: int = 0
         self.stop_orders: Dict[str, StopOrder] = {}
@@ -162,90 +165,46 @@ class DVPBacktestingEngine:
             self, strategy_class.__name__, self.vt_symbol, setting
         )
 
-    def load_data(self) -> None:
+    def load_data(self, bar_history_data: list, bar_history_stock_data: list) -> None:
         """"""
-        [self.history_data, self.history_stock_data] = load_tick_data(self.symbol, self.symbol_stock, self.exchange,
+        self.bar_history_data = bar_history_data
+        self.bar_history_stock_data = bar_history_stock_data
+        [history_data_list, history_stock_data_list] = load_tick_data(self.symbol, self.symbol_stock, self.exchange,
                                                                       self.backtester_date, self.output)
+        for history_data in history_data_list:
+            self.history_data[history_data.datetime] = history_data
+        for history_stock_data in history_stock_data_list:
+            self.history_stock_data[history_stock_data.datetime] = history_stock_data
 
-    def run_backtesting(self) -> None:
+    def init_backtester(self) -> None:
         """"""
-        if self.mode == BacktestingMode.BAR:
-            func = self.new_bar
-        else:
-            func = self.new_tick
 
         self.strategy.on_init()
         self.strategy.inited = True
-        self.output(_("策略初始化完成"))
 
         self.strategy.on_start()
         self.strategy.trading = True
-        self.output(_("开始回放历史数据"))
 
-        total_size: int = len(self.history_data)
-        batch_size: int = max(int(total_size / 10), 1)
+    def replay_backtester(self, tick_dt: datetime) -> None:
+        if tick_dt in self.history_stock_data:
+            self.last_stock_tick = self.history_stock_data[tick_dt]
+        if tick_dt in self.history_data:
+            try:
+                self.new_tick(self.history_data[tick_dt])
+            except Exception:
+                self.output(_("触发异常，回测终止"))
+                self.output(traceback.format_exc())
+                return
 
-        for ix, i in enumerate(range(0, total_size, batch_size)):
-            batch_data: list = self.history_data[i: i + batch_size]
-            for data in batch_data:
-                try:
-                    func(data)
-                except Exception:
-                    self.output(_("触发异常，回测终止"))
-                    self.output(traceback.format_exc())
-                    return
-
-            progress = min(ix / 10, 1)
-            progress_bar: str = "=" * (ix + 1)
-            self.output(_("回放进度：{} [{:.0%}]").format(progress_bar, progress))
-
+    def stop_backtesting(self) -> None:
         self.strategy.on_stop()
-        self.output(_("历史数据回放结束"))
 
     def calculate_result(self) -> DataFrame:
         """"""
-        self.output(_("开始计算逐日盯市盈亏"))
-
-        if not self.trades:
-            self.output(_("回测成交记录为空"))
-
-        # Add trade data into daily reuslt.
-        for trade in self.trades.values():
-            d: date = trade.datetime.date()
-            daily_result: DailyResult = self.daily_results[d]
-            daily_result.add_trade(trade)
-
-        # Calculate daily result by iteration.
-        pre_close = 0
-        start_pos = 0
-
-        for daily_result in self.daily_results.values():
-            daily_result.calculate_pnl(
-                pre_close,
-                start_pos,
-                self.size,
-                self.rate,
-                self.slippage
-            )
-
-            pre_close = daily_result.close_price
-            start_pos = daily_result.end_pos
-
-        # Generate dataframe
-        results: defaultdict = defaultdict(list)
-
-        for daily_result in self.daily_results.values():
-            for key, value in daily_result.__dict__.items():
-                results[key].append(value)
-
-        self.daily_df = DataFrame.from_dict(results).set_index("date")
-
-        self.output(_("逐日盯市盈亏计算完成"))
         return self.daily_df
 
     def calculate_statistics(self, df: DataFrame = None, output=True) -> dict:
         """"""
-        self.output(_("开始计算策略统计指标"))
 
         # Check DataFrame input exterior
         if df is None:
@@ -433,7 +392,6 @@ class DVPBacktestingEngine:
                 value = 0
             statistics[key] = np.nan_to_num(value)
 
-        self.output(_("策略统计指标计算完成"))
         return statistics
 
     # def show_chart(self, df: DataFrame = None) -> None:
@@ -564,7 +522,7 @@ class DVPBacktestingEngine:
 
         self.cross_limit_order()
         self.cross_stop_order()
-        self.strategy.on_tick(tick)
+        self.strategy.on_tick(tick, self.last_stock_tick)
 
         self.update_daily_close(tick.last_price)
 

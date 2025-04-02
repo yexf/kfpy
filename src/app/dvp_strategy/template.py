@@ -113,7 +113,7 @@ class DVPTemplate(ABC):
         pass
 
     @virtual
-    def on_tick(self, tick: TickData) -> None:
+    def on_tick(self, tick: TickData, stock_tick: TickData = None) -> None:
         """
         Callback of new tick data update.
         """
