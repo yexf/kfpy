@@ -290,7 +290,7 @@ class BacktesterManager(QtWidgets.QWidget):
         self.daily_button.setEnabled(True)
 
         # Tick data can not be displayed using candle chart
-        interval: str = self.interval_combo.currentText()
+        interval: str = Interval.TICK.value
         if interval != Interval.TICK.value:
             self.candle_button.setEnabled(True)
 

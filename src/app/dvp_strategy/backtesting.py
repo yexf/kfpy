@@ -18,7 +18,7 @@ from src.trader.constant import (
     Status
 )
 from src.trader.database import get_database, BaseDatabase
-from src.trader.object import OrderData, TradeData, BarData, TickData
+from src.trader.object import OrderData, TradeData, BarData, TickData, HistoryRequest
 from src.trader.utility import round_to, extract_vt_symbol
 from src.trader.optimize import (
     OptimizationSetting,
@@ -37,6 +37,7 @@ from .base import (
 )
 from .template import DVPTemplate
 from src.util.utility import locate as _
+from ...trader.datafeed import BaseDatafeed, get_datafeed
 
 
 class DVPBacktestingEngine:
@@ -47,11 +48,12 @@ class DVPBacktestingEngine:
 
     def __init__(self) -> None:
         """"""
+        self.vt_symbol_stock = None
         self.vt_symbol: str = ""
         self.symbol: str = ""
+        self.symbol_stock: str = ""
         self.exchange: Exchange = None
-        self.start: datetime = None
-        self.end: datetime = None
+        self.backtester_date: datetime = None
         self.rate: float = 0
         self.slippage: float = 0
         self.size: float = 1
@@ -72,6 +74,7 @@ class DVPBacktestingEngine:
         self.days: int = 0
         self.callback: Callable = None
         self.history_data: list = []
+        self.history_stock_data: list = []
 
         self.stop_order_count: int = 0
         self.stop_orders: Dict[str, StopOrder] = {}
@@ -88,6 +91,8 @@ class DVPBacktestingEngine:
 
         self.daily_results: Dict[date, DailyResult] = {}
         self.daily_df: DataFrame = None
+
+        self.datafeed: BaseDatafeed = get_datafeed()
 
     def clear_data(self) -> None:
         """
@@ -113,39 +118,37 @@ class DVPBacktestingEngine:
         self.daily_results.clear()
 
     def set_parameters(
-        self,
-        vt_symbol: str,
-        interval: Interval,
-        start: datetime,
-        rate: float,
-        slippage: float,
-        size: float,
-        pricetick: float,
-        capital: int = 0,
-        end: datetime = None,
-        mode: BacktestingMode = BacktestingMode.BAR,
-        risk_free: float = 0,
-        annual_days: int = 240,
-        half_life: int = 120
+            self,
+            vt_symbol: str,
+            vt_symbol_stock: str,
+            interval: Interval,
+            backtester_date: datetime,
+            rate: float,
+            slippage: float,
+            size: float,
+            pricetick: float,
+            capital: int = 0,
+            mode: BacktestingMode = BacktestingMode.BAR,
+            risk_free: float = 0,
+            annual_days: int = 240,
+            half_life: int = 120
     ) -> None:
         """"""
         self.mode = mode
         self.vt_symbol = vt_symbol
+        self.vt_symbol_stock = vt_symbol_stock
         self.interval = Interval(interval)
         self.rate = rate
         self.slippage = slippage
         self.size = size
         self.pricetick = pricetick
-        self.start = start
+        self.backtester_date = backtester_date
 
         self.symbol, exchange_str = self.vt_symbol.split(".")
+        self.symbol_stock, exchange_str = self.vt_symbol_stock.split(".")
         self.exchange = Exchange(exchange_str)
 
         self.capital = capital
-
-        if not end:
-            end = datetime.now()
-        self.end = end.replace(hour=23, minute=59, second=59)
 
         self.mode = mode
         self.risk_free = risk_free
@@ -161,58 +164,8 @@ class DVPBacktestingEngine:
 
     def load_data(self) -> None:
         """"""
-        self.output(_("开始加载历史数据"))
-
-        if not self.end:
-            self.end = datetime.now()
-
-        if self.start >= self.end:
-            self.output(_("起始日期必须小于结束日期"))
-            return
-
-        self.history_data.clear()       # Clear previously loaded history data
-
-        # Load 30 days of data each time and allow for progress update
-        total_days: int = (self.end - self.start).days
-        progress_days: int = max(int(total_days / 10), 1)
-        progress_delta: timedelta = timedelta(days=progress_days)
-        interval_delta: timedelta = INTERVAL_DELTA_MAP[self.interval]
-
-        start: datetime = self.start
-        end: datetime = self.start + progress_delta
-        progress = 0
-
-        while start < self.end:
-            progress_bar: str = "#" * int(progress * 10 + 1)
-            self.output(_("加载进度：{} [{:.0%}]").format(progress_bar, progress))
-
-            end: datetime = min(end, self.end)  # Make sure end time stays within set range
-
-            if self.mode == BacktestingMode.BAR:
-                data: List[BarData] = load_bar_data(
-                    self.symbol,
-                    self.exchange,
-                    self.interval,
-                    start,
-                    end
-                )
-            else:
-                data: List[TickData] = load_tick_data(
-                    self.symbol,
-                    self.exchange,
-                    start,
-                    end
-                )
-
-            self.history_data.extend(data)
-
-            progress += progress_days / total_days
-            progress = min(progress, 1)
-
-            start = end + interval_delta
-            end += progress_delta
-
-        self.output(_("历史数据加载完成，数据量：{}").format(len(self.history_data)))
+        [self.history_data, self.history_stock_data] = load_tick_data(self.symbol, self.symbol_stock, self.exchange,
+                                                                      self.backtester_date, self.output)
 
     def run_backtesting(self) -> None:
         """"""
@@ -528,10 +481,10 @@ class DVPBacktestingEngine:
         return fig
 
     def run_bf_optimization(
-        self,
-        optimization_setting: OptimizationSetting,
-        output: bool = True,
-        max_workers: int = None
+            self,
+            optimization_setting: OptimizationSetting,
+            output: bool = True,
+            max_workers: int = None
     ) -> list:
         """"""
         if not check_optimization_setting(optimization_setting):
@@ -556,11 +509,11 @@ class DVPBacktestingEngine:
     run_optimization = run_bf_optimization
 
     def run_ga_optimization(
-        self,
-        optimization_setting: OptimizationSetting,
-        output: bool = True,
-        max_workers: int = None,
-        ngen_size: int = 30
+            self,
+            optimization_setting: OptimizationSetting,
+            output: bool = True,
+            max_workers: int = None,
+            ngen_size: int = 30
     ) -> list:
         """"""
         if not check_optimization_setting(optimization_setting):
@@ -638,15 +591,15 @@ class DVPBacktestingEngine:
 
             # Check whether limit orders can be filled.
             long_cross: bool = (
-                order.direction == Direction.LONG
-                and order.price >= long_cross_price
-                and long_cross_price > 0
+                    order.direction == Direction.LONG
+                    and order.price >= long_cross_price
+                    and long_cross_price > 0
             )
 
             short_cross: bool = (
-                order.direction == Direction.SHORT
-                and order.price <= short_cross_price
-                and short_cross_price > 0
+                    order.direction == Direction.SHORT
+                    and order.price <= short_cross_price
+                    and short_cross_price > 0
             )
 
             if not long_cross and not short_cross:
@@ -706,13 +659,13 @@ class DVPBacktestingEngine:
         for stop_order in list(self.active_stop_orders.values()):
             # Check whether stop order can be triggered.
             long_cross: bool = (
-                stop_order.direction == Direction.LONG
-                and stop_order.price <= long_cross_price
+                    stop_order.direction == Direction.LONG
+                    and stop_order.price <= long_cross_price
             )
 
             short_cross: bool = (
-                stop_order.direction == Direction.SHORT
-                and stop_order.price >= short_cross_price
+                    stop_order.direction == Direction.SHORT
+                    and stop_order.price >= short_cross_price
             )
 
             if not long_cross and not short_cross:
@@ -776,60 +729,16 @@ class DVPBacktestingEngine:
             self.strategy.pos += pos_change
             self.strategy.on_trade(trade)
 
-    def load_bar(
-        self,
-        vt_symbol: str,
-        days: int,
-        interval: Interval,
-        callback: Callable,
-        use_database: bool
-    ) -> List[BarData]:
-        """"""
-        self.callback = callback
-
-        init_end = self.start - INTERVAL_DELTA_MAP[interval]
-        init_start = self.start - timedelta(days=days)
-
-        symbol, exchange = extract_vt_symbol(vt_symbol)
-
-        bars: List[BarData] = load_bar_data(
-            symbol,
-            exchange,
-            interval,
-            init_start,
-            init_end
-        )
-
-        return bars
-
-    def load_tick(self, vt_symbol: str, days: int, callback: Callable) -> List[TickData]:
-        """"""
-        self.callback = callback
-
-        init_end = self.start - timedelta(seconds=1)
-        init_start = self.start - timedelta(days=days)
-
-        symbol, exchange = extract_vt_symbol(vt_symbol)
-
-        ticks: List[TickData] = load_tick_data(
-            symbol,
-            exchange,
-            init_start,
-            init_end
-        )
-
-        return ticks
-
     def send_order(
-        self,
-        strategy: DVPTemplate,
-        direction: Direction,
-        offset: Offset,
-        price: float,
-        volume: float,
-        stop: bool,
-        lock: bool,
-        net: bool
+            self,
+            strategy: DVPTemplate,
+            direction: Direction,
+            offset: Offset,
+            price: float,
+            volume: float,
+            stop: bool,
+            lock: bool,
+            net: bool
     ) -> list:
         """"""
         price: float = round_to(price, self.pricetick)
@@ -840,11 +749,11 @@ class DVPBacktestingEngine:
         return [vt_orderid]
 
     def send_stop_order(
-        self,
-        direction: Direction,
-        offset: Offset,
-        price: float,
-        volume: float
+            self,
+            direction: Direction,
+            offset: Offset,
+            price: float,
+            volume: float
     ) -> str:
         """"""
         self.stop_order_count += 1
@@ -866,11 +775,11 @@ class DVPBacktestingEngine:
         return stop_order.stop_orderid
 
     def send_limit_order(
-        self,
-        direction: Direction,
-        offset: Offset,
-        price: float,
-        volume: float
+            self,
+            direction: Direction,
+            offset: Offset,
+            price: float,
+            volume: float
     ) -> str:
         """"""
         self.limit_order_count += 1
@@ -1029,12 +938,12 @@ class DailyResult:
         self.trades.append(trade)
 
     def calculate_pnl(
-        self,
-        pre_close: float,
-        start_pos: float,
-        size: int,
-        rate: float,
-        slippage: float
+            self,
+            pre_close: float,
+            start_pos: float,
+            size: int,
+            rate: float,
+            slippage: float
     ) -> None:
         """"""
         # If no pre_close provided on the first day,
@@ -1063,7 +972,7 @@ class DailyResult:
 
             turnover: float = trade.volume * size * trade.price
             self.trading_pnl += pos_change * \
-                (self.close_price - trade.price) * size
+                                (self.close_price - trade.price) * size
             self.slippage += trade.volume * size * slippage
 
             self.turnover += turnover
@@ -1075,50 +984,40 @@ class DailyResult:
 
 
 @lru_cache(maxsize=999)
-def load_bar_data(
-    symbol: str,
-    exchange: Exchange,
-    interval: Interval,
-    start: datetime,
-    end: datetime
-) -> List[BarData]:
-    """"""
-    database: BaseDatabase = get_database()
-
-    return database.load_bar_data(
-        symbol, exchange, interval, start, end
-    )
-
-
-@lru_cache(maxsize=999)
 def load_tick_data(
-    symbol: str,
-    exchange: Exchange,
-    start: datetime,
-    end: datetime
-) -> List[TickData]:
+        symbol: str,
+        symbol_stock: str,
+        exchange: Exchange,
+        backtester_date: datetime,
+        output,
+) -> [List[TickData], List[TickData]]:
     """"""
-    database: BaseDatabase = get_database()
-
-    return database.load_tick_data(
-        symbol, exchange, start, end
-    )
+    datafeed = get_datafeed()
+    bond_req: HistoryRequest = HistoryRequest(symbol=symbol, exchange=exchange,
+                                              start=backtester_date,
+                                              interval=Interval.TICK)
+    stock_req: HistoryRequest = HistoryRequest(symbol=symbol_stock, exchange=exchange,
+                                               start=backtester_date,
+                                               interval=Interval.TICK)
+    bond_data = datafeed.query_tick_history(bond_req, output)
+    stock_data = datafeed.query_tick_history(stock_req, output)
+    return [bond_data, stock_data]
 
 
 def evaluate(
-    target_name: str,
-    strategy_class: DVPTemplate,
-    vt_symbol: str,
-    interval: Interval,
-    start: datetime,
-    rate: float,
-    slippage: float,
-    size: float,
-    pricetick: float,
-    capital: int,
-    end: datetime,
-    mode: BacktestingMode,
-    setting: dict
+        target_name: str,
+        strategy_class: DVPTemplate,
+        vt_symbol: str,
+        interval: Interval,
+        start: datetime,
+        rate: float,
+        slippage: float,
+        size: float,
+        pricetick: float,
+        capital: int,
+        end: datetime,
+        mode: BacktestingMode,
+        setting: dict
 ) -> tuple:
     """
     Function for running in multiprocessing.pool

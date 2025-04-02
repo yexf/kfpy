@@ -1,7 +1,4 @@
-import os
-import sys
 from datetime import datetime, timedelta
-from pathlib import Path
 from time import sleep
 from tqdm import tqdm
 from xtquant import xtdata
@@ -9,18 +6,13 @@ from xtquant import xtdata
 from src.event import EventEngine
 from src.gateway.qmt import QmtGateway
 from src.gateway.qmt.utils import TO_VN_Exchange_map, timestamp_to_datetime
-from src.trader.constant import Interval
 from src.trader.database import get_database
 from src.trader.object import TickData
-from src.util import timer
-from src.util.data_tool.eastmoney_bond import get_bond_info
-from src.util.timer import get_datatime
+from src.util import timer, conv_bond_infos
 from src.trader.utility import load_json, save_json
-from src.util.utility import get_data_path
 
 pbar = None
 last_finished = 0
-conv_bond_infos = get_bond_info("conv_bond_all.json")
 
 
 def jdt_clean():
@@ -197,8 +189,8 @@ def conv_tick(qmt_gateway, datas):
 def do_dumpdb(qmt_gateway, database_engine, code, start_date, end_date):
     start_time_dt = datetime.strptime(start_date, "%Y%m%d")
     end_time_dt = datetime.strptime(end_date, "%Y%m%d")
-    start_time = get_datatime(start_time_dt, "start")
-    end_time = get_datatime(end_time_dt, "end")
+    start_time = timer.get_datatime(start_time_dt, "start")
+    end_time = timer.get_datatime(end_time_dt, "end")
     data = xtdata.get_market_data([], [code], "tick",
                                   timer.to_tick_market_str(start_time), timer.to_tick_market_str(end_time))
     tick_list = conv_tick(qmt_gateway, data)

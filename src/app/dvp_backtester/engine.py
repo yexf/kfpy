@@ -23,7 +23,9 @@ from src.app.dvp_strategy.backtesting import (
     OptimizationSetting,
     BacktestingMode
 )
-from src.trader.object import HistoryRequest
+from src.trader.object import HistoryRequest, SubscribeRequest
+from src.gateway.qmt.utils import get_bond_info
+from src.util import conv_bond_infos
 from src.util.utility import locate as _
 
 APP_NAME = "DVPBacktester"
@@ -31,6 +33,7 @@ APP_NAME = "DVPBacktester"
 EVENT_BACKTESTER_LOG = "eBacktesterLog"
 EVENT_BACKTESTER_BACKTESTING_FINISHED = "eBacktesterBacktestingFinished"
 EVENT_BACKTESTER_OPTIMIZATION_FINISHED = "eBacktesterOptimizationFinished"
+
 
 class BacktesterEngine(BaseEngine):
     """
@@ -42,7 +45,7 @@ class BacktesterEngine(BaseEngine):
         super().__init__(main_engine, event_engine, APP_NAME)
 
         self.classes: dict = {}
-        self.backtesting_engine: DVPBacktestingEngine = None
+        self.backtesting_engine: dict = {}
         self.thread: Thread = None
 
         self.datafeed: BaseDatafeed = get_datafeed()
@@ -58,10 +61,9 @@ class BacktesterEngine(BaseEngine):
     def init_engine(self) -> None:
         """"""
         self.write_log(_("初始化DVP回测引擎"))
-
-        self.backtesting_engine = DVPBacktestingEngine()
-        # Redirect log from backtesting engine outside.
-        self.backtesting_engine.output = self.write_log
+        # self.backtesting_engine = DVPBacktestingEngine()
+        # # Redirect log from backtesting engine outside.
+        # self.backtesting_engine.output = self.write_log
 
         self.load_strategy_class()
         self.write_log(_("策略文件加载完成"))
@@ -154,34 +156,47 @@ class BacktesterEngine(BaseEngine):
         """"""
         self.result_df = None
         self.result_statistics = None
+        [bond_infos, stock_infos] = get_bond_info(conv_bond_infos, backtester_date)
+        engine_num = len(stock_infos)
 
-        engine: DVPBacktestingEngine = self.backtesting_engine
-        engine.clear_data()
-        mode: BacktestingMode = BacktestingMode.TICK
-        engine.set_parameters(
-            section=section,
-            choose_strategy=choose_strategy,
-            backtester_date=backtester_date,
-            rate=rate,
-            slippage=slippage,
-            size=size,
-            pricetick=pricetick,
-            capital=capital,
-            mode=mode
-        )
+        self.write_log(_("开始加载历史数据 {}-{}").format(section, backtester_date.date()))
 
-        strategy_class: type[DVPTemplate] = self.classes[class_name]
-        engine.add_strategy(
-            strategy_class,
-            setting
-        )
+        for i in range(engine_num):
+            engine: DVPBacktestingEngine = DVPBacktestingEngine()
+            engine.output = self.write_log
+            engine.clear_data()
+            mode: BacktestingMode = BacktestingMode.TICK
+            interval: Interval = Interval.TICK
+            engine.set_parameters(
+                vt_symbol=bond_infos[i].vt_symbol,
+                vt_symbol_stock=stock_infos[i].vt_symbol,
+                interval=interval,
+                backtester_date=backtester_date,
+                rate=rate,
+                slippage=slippage,
+                size=size,
+                pricetick=pricetick,
+                capital=capital,
+                mode=mode
+            )
 
-        engine.load_data()
-        if not engine.tick_history_data:
-            self.write_log(_("策略回测失败，历史数据为空"))
-            self.thread = None
-            return
+            strategy_class: type[DVPTemplate] = self.classes[class_name]
+            engine.add_strategy(
+                strategy_class,
+                setting
+            )
 
+            engine.load_data()
+            if not engine.history_data:
+                self.write_log(_("策略回测失败，历史数据为空"))
+                self.thread = None
+                return
+            progress = i / engine_num
+            progress_bar: str = "#" * int(progress * 10 + 1)
+            self.write_log(_("加载进度：{} [{:.0%}]").format(progress_bar, progress))
+            self.backtesting_engine[bond_infos[i].vt_symbol] = engine
+
+        self.write_log(_("历史数据加载完成，引擎数：{}").format(engine_num))
         try:
             engine.run_backtesting()
         except Exception:
@@ -382,8 +397,9 @@ class BacktesterEngine(BaseEngine):
             # 不设置end 的 req 只是下载
             tick_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD, start=backtester_date,
                                                       interval=Interval.TICK)
-            daily_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD, start=backtester_date,
-                                                      interval=Interval.DAILY)
+            daily_req: HistoryRequest = HistoryRequest(symbol=section, exchange=Exchange.DOWNLOAD,
+                                                       start=backtester_date,
+                                                       interval=Interval.DAILY)
             self.datafeed.query_tick_history(tick_req, self.write_log)
             self.datafeed.query_bar_history(daily_req, self.write_log)
             self.write_log(_("{}-{} 历史数据下载完成").format(section, backtester_date.date()))

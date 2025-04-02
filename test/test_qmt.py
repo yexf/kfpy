@@ -1,8 +1,8 @@
 from datetime import datetime
 import pandas as pd
 from xtquant import xtdata
-from src.util import timer
-from src.util.save_tick_data import conv_bond_infos, jdt_clean, on_process
+from src.util import timer, conv_bond_infos
+from src.util.save_tick_data import jdt_clean, on_process
 from src.util.timer import get_datatime
 
 

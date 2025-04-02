@@ -2,11 +2,13 @@ import os
 from datetime import datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
+
+from pandas import DataFrame
 from xtquant import (
     xtdata
 )
 
-from src.gateway.qmt.utils import to_vn_contract
+from src.gateway.qmt.utils import to_vn_contract, get_bond_info
 from src.gateway.xt.xt_datafeed import XtDatafeed
 from src.trader.constant import Exchange, Interval
 from src.trader.object import BarData, TickData, HistoryRequest, SubscribeRequest
@@ -14,7 +16,7 @@ from src.trader.utility import ZoneInfo, load_json, save_json
 from src.trader.datafeed import BaseDatafeed
 from typing import Callable, Optional, List
 
-from src.util.bond_util import get_bond_info
+from src.util import conv_bond_infos
 from src.util.utility import insert_tick_history, insert_bar_history, get_data_path
 
 INTERVAL_VT2XT: dict[Interval, str] = {
@@ -83,7 +85,7 @@ def get_daily_data(start: datetime, end: datetime, interval: Interval, output: C
         output(f"迅投研查询历史数据失败：不支持的时间周期{interval.value}")
         return []
 
-    code_infos: List[List[SubscribeRequest]] = get_bond_info(end)
+    code_infos: List[List[SubscribeRequest]] = get_bond_info(conv_bond_infos, end)
     [bond_infos, stock_infos] = code_infos
 
     xt_code_list = []
@@ -122,7 +124,7 @@ def get_tick_data(start: datetime, end: datetime, output: Callable = print, step
         output(f"迅投研查询历史数据失败：不支持的时间周期{interval.value}")
         return []
 
-    code_infos: List[List[SubscribeRequest]] = get_bond_info(end)
+    code_infos: List[List[SubscribeRequest]] = get_bond_info(conv_bond_infos, end)
     [bond_infos, stock_infos] = code_infos
 
     xt_code_list = []
@@ -159,7 +161,7 @@ def download_daily_data(start: datetime, end: datetime, interval: Interval, outp
         output(f"迅投研查询历史数据失败：不支持的时间周期{interval.value}")
         return {}
 
-    code_infos: List[List[SubscribeRequest]] = get_bond_info(end)
+    code_infos: List[List[SubscribeRequest]] = get_bond_info(conv_bond_infos, end)
     [bond_infos, stock_infos] = code_infos
 
     daily_list = []
@@ -194,7 +196,7 @@ def download_tick_data(tick_donwload_info: dict[str, set], start: datetime, outp
         output(f"迅投研查询历史数据失败：不支持的时间周期{interval.value}")
         return {}
 
-    code_infos: List[List[SubscribeRequest]] = get_bond_info(start)
+    code_infos: List[List[SubscribeRequest]] = get_bond_info(conv_bond_infos, start)
     [bond_infos, stock_infos] = code_infos
 
     tick_list = []
@@ -276,7 +278,19 @@ class QmtDatafeed(BaseDatafeed):
                 return get_tick_data(req.start, req.start, output)
             else:
                 return None
-        return self.xt_datafeed.query_tick_history(req, output)
+
+        history: list[TickData] = []
+        interval = Interval.TICK
+        xt_interval: str = INTERVAL_VT2XT.get(interval, None)
+        start: str = req.start.strftime("%Y%m%d")
+        xt_symbol: str = req.symbol + "." + EXCHANGE_VT2XT[req.exchange]
+        if start not in self.tick_donwload_info[xt_symbol]:
+            xtdata.download_history_data(xt_symbol, xt_interval, start, start)
+        data: dict = xtdata.get_local_data([], [xt_symbol], xt_interval, start, start, -1, "front_ratio",
+                                           False)  # 默认等比前复权
+
+        insert_tick_history(req.symbol, req.exchange, history, data[xt_symbol])
+        return history
 
 
 if __name__ == '__main__':

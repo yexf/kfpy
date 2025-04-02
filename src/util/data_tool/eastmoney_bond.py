@@ -200,7 +200,7 @@ def update_eastmoney_bond(file_name: str) -> bool:
     return True
 
 
-def get_bond_info(file_name: str) -> Union[dict, list]:
+def get_conv_bond(file_name: str) -> Union[dict, list]:
     if update_eastmoney_bond(file_name):
         return get_data(file_name)
     else:
