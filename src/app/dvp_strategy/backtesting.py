@@ -165,7 +165,7 @@ class DVPBacktestingEngine:
             self, strategy_class.__name__, self.vt_symbol, setting
         )
 
-    def load_data(self, bar_history_data: list, bar_history_stock_data: list) -> None:
+    def load_data(self, bar_history_data: list[BarData], bar_history_stock_data: list[BarData]) -> None:
         """"""
         self.bar_history_data = bar_history_data
         self.bar_history_stock_data = bar_history_stock_data
@@ -179,7 +179,7 @@ class DVPBacktestingEngine:
     def init_backtester(self) -> None:
         """"""
 
-        self.strategy.on_init()
+        self.strategy.on_init(self.bar_history_data, self.bar_history_stock_data)
         self.strategy.inited = True
 
         self.strategy.on_start()
@@ -504,17 +504,6 @@ class DVPBacktestingEngine:
         else:
             self.daily_results[d] = DailyResult(d, price)
 
-    def new_bar(self, bar: BarData) -> None:
-        """"""
-        self.bar = bar
-        self.datetime = bar.datetime
-
-        self.cross_limit_order()
-        self.cross_stop_order()
-        self.strategy.on_bar(bar)
-
-        self.update_daily_close(bar.close_price)
-
     def new_tick(self, tick: TickData) -> None:
         """"""
         self.tick = tick
@@ -722,7 +711,6 @@ class DVPBacktestingEngine:
             offset=offset,
             price=price,
             volume=volume,
-            datetime=self.datetime,
             stop_orderid=f"{STOPORDER_PREFIX}.{self.stop_order_count}",
             strategy_name=self.strategy.strategy_name,
         )
@@ -962,73 +950,3 @@ def load_tick_data(
     return [bond_data, stock_data]
 
 
-def evaluate(
-        target_name: str,
-        strategy_class: DVPTemplate,
-        vt_symbol: str,
-        interval: Interval,
-        start: datetime,
-        rate: float,
-        slippage: float,
-        size: float,
-        pricetick: float,
-        capital: int,
-        end: datetime,
-        mode: BacktestingMode,
-        setting: dict
-) -> tuple:
-    """
-    Function for running in multiprocessing.pool
-    """
-    engine: DVPBacktestingEngine = DVPBacktestingEngine()
-
-    engine.set_parameters(
-        vt_symbol=vt_symbol,
-        interval=interval,
-        start=start,
-        rate=rate,
-        slippage=slippage,
-        size=size,
-        pricetick=pricetick,
-        capital=capital,
-        end=end,
-        mode=mode
-    )
-
-    engine.add_strategy(strategy_class, setting)
-    engine.load_data()
-    engine.run_backtesting()
-    engine.calculate_result()
-    statistics: dict = engine.calculate_statistics(output=False)
-
-    target_value: float = statistics[target_name]
-    return (setting, target_value, statistics)
-
-
-def wrap_evaluate(engine: DVPBacktestingEngine, target_name: str) -> callable:
-    """
-    Wrap evaluate function with given setting from backtesting engine.
-    """
-    func: callable = partial(
-        evaluate,
-        target_name,
-        engine.strategy_class,
-        engine.vt_symbol,
-        engine.interval,
-        engine.start,
-        engine.rate,
-        engine.slippage,
-        engine.size,
-        engine.pricetick,
-        engine.capital,
-        engine.end,
-        engine.mode
-    )
-    return func
-
-
-def get_target_value(result: list) -> float:
-    """
-    Get target value for sorting optimization results.
-    """
-    return result[1]

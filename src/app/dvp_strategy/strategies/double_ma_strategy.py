@@ -27,19 +27,22 @@ class DoubleMaStrategy(DVPTemplate):
     parameters = ["fast_window", "slow_window"]
     variables = ["fast_ma0", "fast_ma1", "slow_ma0", "slow_ma1"]
 
-    def __init__(self, cta_engine, strategy_name, vt_symbol, setting):
+    def __init__(self, dvp_engine, strategy_name, vt_symbol, setting):
         """"""
-        super().__init__(cta_engine, strategy_name, vt_symbol, setting)
+        super().__init__(dvp_engine, strategy_name, vt_symbol, setting)
 
         self.bg = BarGenerator(self.on_bar)
         self.am = ArrayManager()
+        self.bar_history_data: list = None
+        self.bar_history_stock_data: list = None
 
-    def on_init(self):
+    def on_init(self, bar_history_data: list[BarData], bar_history_stock_data: list[BarData]):
         """
         Callback when strategy is inited.
         """
         self.write_log("策略初始化")
-        # self.load_bar(10)
+        self.bar_history_data = bar_history_data
+        self.bar_history_stock_data = bar_history_stock_data
 
     def on_start(self):
         """

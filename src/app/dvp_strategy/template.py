@@ -18,13 +18,13 @@ class DVPTemplate(ABC):
 
     def __init__(
         self,
-        cta_engine: Any,
+        dvp_engine: Any,
         strategy_name: str,
         vt_symbol: str,
         setting: dict,
     ) -> None:
         """"""
-        self.cta_engine: Any = cta_engine
+        self.dvp_engine: Any = dvp_engine
         self.strategy_name: str = strategy_name
         self.vt_symbol: str = vt_symbol
 
@@ -92,7 +92,7 @@ class DVPTemplate(ABC):
         return strategy_data
 
     @virtual
-    def on_init(self) -> None:
+    def on_init(self, bar_history_data: list[BarData], bar_history_stock_data: list[BarData]) -> None:
         """
         Callback when strategy is inited.
         """
@@ -245,7 +245,7 @@ class DVPTemplate(ABC):
         Send a new order.
         """
         if self.trading:
-            vt_orderids: list = self.cta_engine.send_order(
+            vt_orderids: list = self.dvp_engine.send_order(
                 self, direction, offset, price, volume, stop, lock, net
             )
             return vt_orderids
@@ -257,68 +257,44 @@ class DVPTemplate(ABC):
         Cancel an existing order.
         """
         if self.trading:
-            self.cta_engine.cancel_order(self, vt_orderid)
+            self.dvp_engine.cancel_order(self, vt_orderid)
 
     def cancel_all(self) -> None:
         """
         Cancel all orders sent by strategy.
         """
         if self.trading:
-            self.cta_engine.cancel_all(self)
+            self.dvp_engine.cancel_all(self)
 
     def write_log(self, msg: str) -> None:
         """
         Write a log message.
         """
-        self.cta_engine.write_log(msg, self)
+        self.dvp_engine.write_log(msg, self)
 
     def get_engine_type(self) -> EngineType:
         """
-        Return whether the cta_engine is backtesting or live trading.
+        Return whether the dvp_engine is backtesting or live trading.
         """
-        return self.cta_engine.get_engine_type()
+        return self.dvp_engine.get_engine_type()
 
     def get_pricetick(self) -> float:
         """
         Return pricetick data of trading contract.
         """
-        return self.cta_engine.get_pricetick(self)
+        return self.dvp_engine.get_pricetick(self)
 
     def get_size(self) -> int:
         """
         Return size data of trading contract.
         """
-        return self.cta_engine.get_size(self)
-
-    def load_bar(
-        self,
-        days: int,
-        interval: Interval = Interval.MINUTE,
-        callback: Callable = None,
-        use_database: bool = False
-    ) -> None:
-        """
-        Load historical bar data for initializing strategy.
-        """
-        if not callback:
-            callback: Callable = self.on_bar
-
-        bars: List[BarData] = self.cta_engine.load_bar(
-            self.vt_symbol,
-            days,
-            interval,
-            callback,
-            use_database
-        )
-
-        for bar in bars:
-            callback(bar)
+        return self.dvp_engine.get_size(self)
 
     def load_tick(self, days: int) -> None:
         """
         Load historical tick data for initializing strategy.
         """
-        ticks: List[TickData] = self.cta_engine.load_tick(self.vt_symbol, days, self.on_tick)
+        ticks: List[TickData] = self.dvp_engine.load_tick(self.vt_symbol, days, self.on_tick)
 
         for tick in ticks:
             self.on_tick(tick)
@@ -328,18 +304,18 @@ class DVPTemplate(ABC):
         Put an strategy data event for ui update.
         """
         if self.inited:
-            self.cta_engine.put_strategy_event(self)
+            self.dvp_engine.put_strategy_event(self)
 
     def send_email(self, msg) -> None:
         """
         Send email to default receiver.
         """
         if self.inited:
-            self.cta_engine.send_email(msg, self)
+            self.dvp_engine.send_email(msg, self)
 
     def sync_data(self) -> None:
         """
         Sync strategy variables value into disk storage.
         """
         if self.trading:
-            self.cta_engine.sync_strategy_data(self)
+            self.dvp_engine.sync_strategy_data(self)
